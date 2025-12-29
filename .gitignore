@@ -38,3 +38,6 @@ dist-ssr
 # Ignore all local history of files
 .history
 .ionide
+
+### macOS ###
+.DS_Store
