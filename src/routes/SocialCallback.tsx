@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
-import useAuth from '../utils/useAuth';
+import useAuth from '../hooks/useAuth';
 
 export default function SocialCallback() {
   const { provider } = useParams<{ provider: 'google' | 'kakao' }>();

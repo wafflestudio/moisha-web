@@ -1,5 +1,5 @@
 import axios from 'axios';
-import useAuthStore from '../utils/useAuthStore';
+import useAuthStore from '../hooks/useAuthStore';
 
 // 공통 설정을 가진 axios 인스턴스 생성
 const apiClient = axios.create({
