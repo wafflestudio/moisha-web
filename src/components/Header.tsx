@@ -1,7 +1,11 @@
 import { Link, NavLink } from 'react-router';
 import useAuth from '../hooks/useAuth';
 
-export default function Header() {
+interface HeaderProps {
+  displayTitle?: string;
+}
+
+export default function Header({ displayTitle }: HeaderProps) {
   const { isLoggedIn, handleLogout } = useAuth();
 
   const linkClassName = (isActive: boolean) => `
@@ -10,11 +14,13 @@ export default function Header() {
   `;
 
   return (
-    <header className="sticky top-0 z-50 flex w-full justify-center bg-grey-50 shadow-md">
+    <header className="sticky top-0 z-100 flex w-full justify-center bg-white">
       <div className="flex w-full items-center justify-between px-6 py-4 sm:w-screen-sm md:w-screen-md lg:w-screen-lg xl:max-w-screen-xl">
-        <Link to="/" className="text-xl font-bold font-title">
-          모이샤
-        </Link>
+        <div className="text-xl font-bold font-title">
+          <Link to="/">모이샤</Link>
+          {displayTitle ? ` - ${displayTitle}` : null}
+        </div>
+
         <div className="items-center space-x-2">
           {isLoggedIn === false ? (
             <>

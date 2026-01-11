@@ -9,7 +9,7 @@ interface AuthState {
   // 로그인 시 유저 정보와 토큰을 함께 저장
   login: (user: User, token: string) => void;
   // 로그아웃 시 상태 초기화
-  logout: () => void;
+  logout: () => void; 
   // 유저 정보만 업데이트하는 액션
   updateUser: (user: User) => void;
 }
