@@ -1,5 +1,6 @@
 import { createBrowserRouter } from 'react-router';
 import RootLayout from './layouts/RootLayout';
+import Event from './routes/Event';
 import Home from './routes/Home';
 import Login from './routes/Login';
 import RegisterChoice from './routes/RegisterChoice';
@@ -16,6 +17,12 @@ export const router = createBrowserRouter([
       { path: 'register', Component: RegisterChoice },
       { path: 'register/email', Component: RegisterForm },
       { path: 'auth/callback/:provider', Component: SocialCallback },
+    ],
+  },
+  {
+    path: '/event/:id',
+    children: [
+      { index: true, Component: Event },
     ],
   },
 ]);
