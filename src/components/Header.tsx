@@ -26,7 +26,7 @@ export default function Header() {
           모이샤
         </Link>
         <div className="items-center space-x-2">
-          {isLoggedIn === true ? (
+          {!isLoggedIn ? (
             <>
               <NavLink
                 to="/login"
