@@ -21,6 +21,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/event/:id',
+    Component: RootLayout,
     children: [{ index: true, Component: Event }],
   },
 ]);
