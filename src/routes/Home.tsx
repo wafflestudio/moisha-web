@@ -48,7 +48,7 @@ export default function Home() {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="flex w-full max-w-md flex-col gap-10">
-          <h1 className="text-4xl font-bold text-center animate-[wiggle_1s_ease-in-out_infinite]">
+          <h1 className="text-4xl font-bold text-center">
             복잡한 모임 관리, <br></br> 모이샤로 쉽게!
           </h1>
           <div className="flex flex-col items-center justify-center gap-4">
