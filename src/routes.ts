@@ -6,6 +6,7 @@ import Login from './routes/Login';
 import RegisterChoice from './routes/RegisterChoice';
 import RegisterForm from './routes/RegisterForm';
 import SocialCallback from './routes/SocialCallback';
+import Guests from './routes/Guests';
 
 export const router = createBrowserRouter([
   {
@@ -22,6 +23,9 @@ export const router = createBrowserRouter([
   {
     path: '/event/:id',
     Component: RootLayout,
-    children: [{ index: true, Component: Event }],
+    children: [
+      { index: true, Component: Event },
+      { path: 'guests', Component: Guests },
+    ],
   },
 ]);
