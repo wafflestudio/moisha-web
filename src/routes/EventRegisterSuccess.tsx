@@ -34,7 +34,7 @@ const IconChevronLeft = () => (
   </svg>
 );
 
-export default function JoinSuccess() {
+export default function EventRegisterSuccess() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [schedule, setSchedule] = useState<Events | null>(null);
