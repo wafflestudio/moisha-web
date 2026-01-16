@@ -59,7 +59,12 @@ export function DateTimePicker(props: DateTimePickerProps) {
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
-          {date ? date.toLocaleString() : placeholder}
+          {date
+            ? date.toLocaleString('ko-KR', {
+                dateStyle: 'medium',
+                timeStyle: 'short',
+              })
+            : placeholder}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0">
