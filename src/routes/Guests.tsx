@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router';
 import { toast } from 'sonner';
+import useEventDetail from '../hooks/useEventDetail';
 
 // shadcn UI 컴포넌트
 import {
@@ -33,81 +34,95 @@ const IconChevronLeft = () => (
   </svg>
 );
 
-interface GuestResponse {
-  registration_id: number;
-  name: string;
-  email: string | null;
-  profile_image: string | null;
-}
+// interface GuestResponse {
+//   registration_id: number;
+//   name: string;
+//   email: string | null;
+//   profile_image: string | null;
+// }
 
 export default function Guests() {
-  // API로 불러올 registrations id
-  // const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  // const [guests, setGuests] = useState<GuestResponse[]>([]);
 
-  const [guests, setGuests] = useState<GuestResponse[]>([]);
+  // useEffect(() => {
+  //   // 데이터 하드코딩
+  //   const mockGuests: GuestResponse[] = [
+  //     {
+  //       registration_id: 1,
+  //       name: '이준엽',
+  //       email: 'jun411@snu.ac.kr',
+  //       profile_image: 'https://github.com/shadcn.png',
+  //     },
+  //     {
+  //       registration_id: 2,
+  //       name: '이름2',
+  //       email: '이메일@example.com',
+  //       profile_image: null,
+  //     },
+  //     {
+  //       registration_id: 3,
+  //       name: '이름3',
+  //       email: '이메일@example.com',
+  //       profile_image: null,
+  //     },
+  //     {
+  //       registration_id: 4,
+  //       name: '이름4',
+  //       email: '이메일@example.com',
+  //       profile_image: null,
+  //     },
+  //     {
+  //       registration_id: 5,
+  //       name: '이름5',
+  //       email: null,
+  //       profile_image: null,
+  //     },
+  //     {
+  //       registration_id: 6,
+  //       name: '이름6',
+  //       email: '이메일@example.com',
+  //       profile_image: null,
+  //     },
+  //     {
+  //       registration_id: 7,
+  //       name: '이름7',
+  //       email: '이메일@example.com',
+  //       profile_image: null,
+  //     },
+  //     {
+  //       registration_id: 8,
+  //       name: '이름8',
+  //       email: '이메일@example.com',
+  //       profile_image: null,
+  //     },
+  //   ];
+
+  //   setGuests(mockGuests);
+  // }, []);
+
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { loading, registrations, handleFetchRegistrations } = useEventDetail();
 
   useEffect(() => {
-    // 데이터 하드코딩
-    const mockGuests: GuestResponse[] = [
-      {
-        registration_id: 1,
-        name: '이준엽',
-        email: 'jun411@snu.ac.kr',
-        profile_image: 'https://github.com/shadcn.png',
-      },
-      {
-        registration_id: 2,
-        name: '이름2',
-        email: '이메일@example.com',
-        profile_image: null,
-      },
-      {
-        registration_id: 3,
-        name: '이름3',
-        email: '이메일@example.com',
-        profile_image: null,
-      },
-      {
-        registration_id: 4,
-        name: '이름4',
-        email: '이메일@example.com',
-        profile_image: null,
-      },
-      {
-        registration_id: 5,
-        name: '이름5',
-        email: null,
-        profile_image: null,
-      },
-      {
-        registration_id: 6,
-        name: '이름6',
-        email: '이메일@example.com',
-        profile_image: null,
-      },
-      {
-        registration_id: 7,
-        name: '이름7',
-        email: '이메일@example.com',
-        profile_image: null,
-      },
-      {
-        registration_id: 8,
-        name: '이름8',
-        email: '이메일@example.com',
-        profile_image: null,
-      },
-    ];
+    if (id) {
+      handleFetchRegistrations(id);
+    }
+  }, [id, handleFetchRegistrations]);
 
-    setGuests(mockGuests);
-  }, []);
-
-  const handleCancelGuest = (regId: number, name: string) => {
+  const handleCancelGuest = (name: string | null) => {
     // 삭제 API 필요
-    setGuests((prev) => prev.filter((g) => g.registration_id !== regId));
     toast.success(`${name} 님의 참여가 취소되었습니다.`);
   };
+
+  // 로딩 중이거나 데이터가 아직 없을 때 (리다이렉트 판단 전) 스피너나 빈 화면 표시
+  if (loading || !registrations) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen relative pb-20">
@@ -123,31 +138,33 @@ export default function Guests() {
             <IconChevronLeft />
           </Button>
           <h1 className="text-2xl sm:text-3xl font-bold ml-4 text-black">
-            참여자 명단({guests.length})
+            참여자 명단({registrations.length})
           </h1>
         </div>
       </div>
 
       {/* 2. 참여자 리스트 */}
       <div className="max-w-2xl min-w-[320px] mx-auto w-[90%] px-6 flex flex-col gap-8 mt-4">
-        {guests.map((guest) => (
+        {registrations.map((registration) => (
           <div
-            key={guest.registration_id}
+            key={registration.id}
             className="flex items-center justify-between w-full"
           >
             <div className="flex items-center gap-4">
               <Avatar className="w-16 h-16 border-none shadow-sm">
-                <AvatarImage src={guest.profile_image || undefined} />
+                <AvatarImage src={registration.guestEmail || undefined} />
                 <AvatarFallback className="bg-black text-white text-xs">
-                  {guest.name.slice(0, 2)}
+                  {registration.guestName?.slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
               <div className="flex flex-col">
                 <span className="text-xl font-bold text-black">
-                  {guest.name}
+                  {registration.guestName}
                 </span>
-                {guest.email ? (
-                  <span className="text-gray-400 text-lg">{guest.email}</span>
+                {registration.guestEmail ? (
+                  <span className="text-gray-400 text-lg">
+                    {registration.guestEmail}
+                  </span>
                 ) : null}
               </div>
             </div>
@@ -165,7 +182,8 @@ export default function Guests() {
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>
-                    <strong>{guest.name}</strong> 님의 신청을 취소하시겠습니까?
+                    <strong>{registration.guestName}</strong> 님의 신청을
+                    취소하시겠습니까?
                   </AlertDialogTitle>
                   <AlertDialogDescription>
                     취소 후 원복이 어렵습니다. 취소 메일이 참여자에게
@@ -175,9 +193,7 @@ export default function Guests() {
                 <AlertDialogFooter>
                   <AlertDialogCancel>신청 유지하기</AlertDialogCancel>
                   <AlertDialogAction
-                    onClick={() =>
-                      handleCancelGuest(guest.registration_id, guest.name)
-                    }
+                    onClick={() => handleCancelGuest(registration.guestName)}
                     className="bg-red-600 hover:bg-red-700"
                   >
                     취소하기

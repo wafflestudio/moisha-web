@@ -4,7 +4,8 @@ import { Label } from '@/components/ui/label';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { GOOGLE_AUTH_URL, KAKAO_AUTH_URL } from '../constants/auth';
-import type { Events } from '../types/schema';
+import useEventDetail from '../hooks/useEventDetail';
+import type { JoinEventRequest } from '../types/event';
 import { formatEventDate } from '../utils/date';
 
 // 아이콘 컴포넌트
@@ -26,9 +27,8 @@ const IconChevronLeft = () => (
 export default function EventRegister() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-
-  // 일정 데이터 상태
-  const [schedule, setSchedule] = useState<Events | null>(null);
+  const { loading, event, confirmedCount, handleFetchDetail, handleJoinEvent } =
+    useEventDetail();
 
   // 폼 상태 관리
   const [formData, setFormData] = useState({
@@ -37,34 +37,40 @@ export default function EventRegister() {
   });
 
   useEffect(() => {
-    // Event.tsx와 동일한 구성의 Mock 데이터
-    const mockEvent: Events = {
-      id: Number(id) || 1,
-      title: '제2회 기획 세미나',
-      description: '일정 설명...',
-      location: '서울대',
-      start_at: '2026-02-02T18:00:00Z',
-      end_at: '2026-02-02T20:00:00Z',
-      capacity: 10,
-      waitlist_enabled: true,
-      registration_deadline: '2026-02-02T17:00:00Z',
-      created_by: 123,
-      created_at: '2026-01-14T00:00:00Z',
-      updated_at: '2026-01-14T00:00:00Z',
+    if (id) {
+      handleFetchDetail(id);
+    }
+  }, [id, handleFetchDetail]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!id) return;
+
+    // 간단한 유효성 검사
+    if (!formData.name.trim() || !formData.email.trim()) {
+      alert('성함과 이메일을 모두 입력해주세요.');
+      return;
+    }
+
+    const requestData: JoinEventRequest = {
+      guestName: formData.name,
+      guestEmail: formData.email,
     };
 
-    setSchedule(mockEvent);
-  }, [id]);
-
-  const handleJoin = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.info('신청 시도:', { eventId: id, ...formData });
-
-    // 신청 완료 페이지로 이동
-    navigate(`/join/${id}/success`);
+    const success = await handleJoinEvent(id, requestData);
+    if (success) {
+      // 신청 성공 시 성공 페이지로 이동
+      navigate(`/join/${id}/success`);
+    }
   };
 
-  if (!schedule) return null;
+  if (loading || !event) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen relative pb-20">
@@ -80,7 +86,7 @@ export default function EventRegister() {
             <IconChevronLeft />
           </Button>
           <h1 className="text-2xl sm:text-3xl font-bold flex-1 ml-4 truncate text-black">
-            {schedule.title}
+            {event.title}
           </h1>
         </div>
       </div>
@@ -90,10 +96,10 @@ export default function EventRegister() {
         {/* 일정 정보 */}
         <div className="text-left space-y-3 w-full">
           <p className="text-lg sm:text-xl font-bold text-black">
-            일시 {formatEventDate(schedule.start_at)}
+            일시 {formatEventDate(event.startAt)}
           </p>
           <p className="text-lg sm:text-xl font-bold text-black">
-            장소 {schedule.location || '미정'}
+            장소 {event.location || '미정'}
           </p>
         </div>
 
@@ -102,9 +108,9 @@ export default function EventRegister() {
           onClick={() => navigate('guests')}
           className="flex items-center text-lg font-bold group hover:opacity-70 transition-opacity"
         >
-          {schedule.capacity}명 중{' '}
+          {event.capacity}명 중{' '}
           <span className="text-black ml-2 font-extrabold">
-            {/* 신청 인원 필드 필요 */} 8명 신청
+            {confirmedCount}명 신청
           </span>
           <div className="rotate-180 ml-2 group-hover:translate-x-1 transition-transform text-black">
             <IconChevronLeft />
@@ -114,7 +120,7 @@ export default function EventRegister() {
         <hr className="w-full border-gray-100" />
 
         {/* 신청 폼 섹션 */}
-        <form onSubmit={handleJoin} className="w-full flex flex-col gap-12">
+        <form onSubmit={handleSubmit} className="w-full flex flex-col gap-12">
           <div className="space-y-10">
             <h2 className="text-xl font-bold text-black">
               예약자 정보를 입력해 주세요

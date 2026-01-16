@@ -1,10 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { toast } from 'sonner';
 import EventDetailContent from '../components/EventDetailContent';
 import GuestSummaryList from '../components/GuestSummaryList';
-import type { Events } from '../types/schema';
-// import useAuth from '../hooks/useAuth';
+import useEventDetail from '../hooks/useEventDetail';
 
 // shadcn UI 컴포넌트
 import {
@@ -74,53 +73,64 @@ const IconLink = () => (
 );
 
 export default function Event() {
+  // 데이터 하드코딩
+  // const [schedule, setSchedule] = useState<Events | null>(null);
+  // const [displayGuests, setDisplayGuests] = useState<
+  //   { name: string; img: string | undefined }[]
+  // >([]);
+
+  // useEffect(() => {
+  //
+  //   const mockEvent: Events = {
+  //     id: Number(id) || 1,
+  //     title: '제2회 기획 세미나',
+  //     description:
+  //       '일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 ...',
+  //     location: '서울대',
+  //     start_at: '2026-02-02T18:00:00Z',
+  //     end_at: '2026-02-02T20:00:00Z',
+  //     capacity: 10,
+  //     waitlist_enabled: true,
+  //     registration_deadline: '2026-02-02T17:00:00Z',
+  //     created_by: 123, // 관리자 ID
+  //     created_at: '2026-01-14T00:00:00Z',
+  //     updated_at: '2026-01-14T00:00:00Z',
+  //   };
+
+  //   setSchedule(mockEvent);
+
+  //   setDisplayGuests([
+  //     { name: '이름1', img: undefined }, // profile_image가 null인 경우
+  //     { name: '이름2', img: 'https://via.placeholder.com/40' },
+  //     { name: '이름3', img: undefined },
+  //     { name: '이름4', img: undefined },
+  //   ]);
+  // }, [id]);
+
+  // if (!schedule) return null;
+
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { loading, event, registrations, confirmedCount, handleFetchDetail } =
+    useEventDetail();
 
-  // 관리자 확인용
-  // const { isAdmin, isLoggedIn } = useAuth();
-
-  const [schedule, setSchedule] = useState<Events | null>(null);
-  const [displayGuests, setDisplayGuests] = useState<
-    { name: string; img: string | undefined }[]
-  >([]);
-
-  const joinLink = `${window.location.origin}/join/${id}`;
-
+  // 권한 확인 및 데이터 로드
   useEffect(() => {
-    // 데이터 하드코딩
-    const mockEvent: Events = {
-      id: Number(id) || 1,
-      title: '제2회 기획 세미나',
-      description:
-        '일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 ...',
-      location: '서울대',
-      start_at: '2026-02-02T18:00:00Z',
-      end_at: '2026-02-02T20:00:00Z',
-      capacity: 10,
-      waitlist_enabled: true,
-      registration_deadline: '2026-02-02T17:00:00Z',
-      created_by: 123, // 관리자 ID
-      created_at: '2026-01-14T00:00:00Z',
-      updated_at: '2026-01-14T00:00:00Z',
+    if (!id) return;
+
+    const init = async () => {
+      const status = await handleFetchDetail(id);
+
+      // 관리자 페이지이므로 'ADMIN' 상태가 아니면 무조건 차단
+      if (status !== 'ADMIN') {
+        alert('관리자만 접근 가능한 페이지입니다.');
+        // 뒤로가기 시 다시 이 페이지로 오지 못하게 replace 사용
+        navigate('/', { replace: true });
+      }
     };
 
-    // 관리자 확인 로직
-    // if (!isLoggedIn || !isAdmin(mockData.ownerName)) {
-    //   alert('접근 권한이 없습니다. 관리자만 접근 가능합니다.');
-    //   navigate('/'); // 혹은 로그인 페이지로 이동
-    //   return;
-    // }
-
-    setSchedule(mockEvent);
-
-    setDisplayGuests([
-      { name: '이름1', img: undefined }, // profile_image가 null인 경우
-      { name: '이름2', img: 'https://via.placeholder.com/40' },
-      { name: '이름3', img: undefined },
-      { name: '이름4', img: undefined },
-    ]);
-  }, [id]);
+    init();
+  }, [id, handleFetchDetail, navigate]);
 
   const handleDelete = () => {
     // 삭제 API 필요
@@ -129,6 +139,8 @@ export default function Event() {
     navigate('/');
   };
 
+  const joinLink = `${window.location.origin}/join/${id}`;
+
   const handleCopyLink = () => {
     navigator.clipboard.writeText(joinLink);
     toast.success('링크가 복사되었습니다!', {
@@ -136,7 +148,14 @@ export default function Event() {
     });
   };
 
-  if (!schedule) return null;
+  // 로딩 중이거나 권한 확인 전에는 화면을 비움
+  if (loading || !event) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen relative pb-20">
@@ -152,7 +171,7 @@ export default function Event() {
             <IconChevronLeft />
           </Button>
           <h1 className="text-2xl sm:text-3xl font-bold flex-1 ml-4 truncate text-black">
-            {schedule.title}
+            {event.title}
           </h1>
 
           <DropdownMenu>
@@ -204,7 +223,10 @@ export default function Event() {
       {/* 2. 메인 콘텐츠*/}
       <div className="max-w-2xl min-w-[320px] mx-auto w-[90%] px-6 flex flex-col items-start gap-10">
         {/* 일정 정보 */}
-        <EventDetailContent schedule={schedule} />
+        <EventDetailContent
+          schedule={event}
+          currentParticipants={confirmedCount}
+        />
 
         {/* 모집 마감 및 링크 블록 */}
         <div className="w-full flex flex-col items-start">
@@ -229,9 +251,9 @@ export default function Event() {
 
         {/* 참여자 명단 섹션 */}
         <GuestSummaryList
-          guests={displayGuests}
-          totalCount={8}
-          eventId={schedule.id}
+          guests={registrations}
+          totalCount={confirmedCount}
+          eventId={event.id}
         />
       </div>
     </div>
