@@ -19,14 +19,15 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
 export default function NewEvent() {
-  const [eventStartDate, setEventStartDate] = useState<Date | undefined>(
-    undefined
+  const now = new Date();
+  const initialRegiEndDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+  const [eventStartDate, setEventStartDate] = useState<Date>(now);
+  const [eventEndDate, setEventEndDate] = useState<Date | undefined>(now);
+  const [regiStartDate, setRegiStartDate] = useState<Date | undefined>(now);
+  const [regiEndDate, setRegiEndDate] = useState<Date | undefined>(
+    initialRegiEndDate
   );
-  const [eventEndDate, setEventEndDate] = useState<Date | undefined>(undefined);
-  const [regiStartDate, setRegiStartDate] = useState<Date | undefined>(
-    new Date()
-  );
-  const [regiEndDate, setRegiEndDate] = useState<Date | undefined>(new Date());
   const [isBounded, setIsBounded] = useState<boolean>(false);
   const [isFromNow, setIsFromNow] = useState<boolean>(false);
   const [isAlwaysOpen, setIsAlwaysOpen] = useState<boolean>(false);
@@ -46,8 +47,11 @@ export default function NewEvent() {
   const handleBoundedChange = (checked: boolean) => {
     setIsBounded(checked);
 
-    if (checked) {
-      setRegiEndDate(eventStartDate);
+    // The end date is automatically set to one hour after the start date
+    if (checked && eventStartDate) {
+      setEventEndDate(new Date(eventStartDate.getTime() + 60 * 60 * 1000));
+    } else {
+      setEventEndDate(undefined);
     }
   };
 
