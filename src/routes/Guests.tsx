@@ -36,7 +36,7 @@ const IconChevronLeft = () => (
 interface GuestResponse {
   registration_id: number;
   name: string;
-  email: string;
+  email: string | null;
   profile_image: string | null;
 }
 
@@ -77,7 +77,7 @@ export default function Guests() {
       {
         registration_id: 5,
         name: '이름5',
-        email: '이메일@example.com',
+        email: null,
         profile_image: null,
       },
       {
@@ -146,7 +146,9 @@ export default function Guests() {
                 <span className="text-xl font-bold text-black">
                   {guest.name}
                 </span>
-                <span className="text-gray-400 text-lg">{guest.email}</span>
+                {guest.email ? (
+                  <span className="text-gray-400 text-lg">{guest.email}</span>
+                ) : null}
               </div>
             </div>
 

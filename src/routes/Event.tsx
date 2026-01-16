@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { toast } from 'sonner';
+import EventDetailContent from '../components/EventDetailContent';
+import GuestSummaryList from '../components/GuestSummaryList';
 import type { Events } from '../types/schema';
-import { formatEventDate } from '../utils/date';
 // import useAuth from '../hooks/useAuth';
 
 // shadcn UI 컴포넌트
@@ -17,7 +18,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -25,7 +25,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 // SVG 아이콘 컴포넌트
 const IconChevronLeft = () => (
@@ -204,45 +203,11 @@ export default function Event() {
 
       {/* 2. 메인 콘텐츠*/}
       <div className="max-w-2xl min-w-[320px] mx-auto w-[90%] px-6 flex flex-col items-start gap-10">
-        {/* 일정 정보 (왼쪽 정렬) */}
-        <div className="text-left space-y-3 w-full">
-          <p className="text-lg sm:text-xl font-bold text-black">
-            일시 {formatEventDate(schedule.start_at)}
-          </p>
-          <p className="text-lg sm:text-xl font-bold text-black">
-            장소 {schedule.location || '미정'}
-          </p>
-        </div>
-
-        {/* 신청 현황 버튼 */}
-        <button
-          onClick={() => navigate('guests')}
-          className="flex items-center text-lg font-bold group hover:opacity-70 transition-opacity"
-        >
-          {schedule.capacity}명 중{' '}
-          <span className="text-black ml-2 font-extrabold">
-            {/* 신청 인원 필드 필요 */} 8명 신청
-          </span>
-          <div className="rotate-180 ml-2 group-hover:translate-x-1 transition-transform text-black">
-            <IconChevronLeft />
-          </div>
-        </button>
-
-        {/* 상세 설명 */}
-        <ScrollArea className="h-40 w-full rounded-md border-none">
-          <p className="text-base text-gray-500 leading-relaxed whitespace-pre-wrap pr-4">
-            {schedule.description}
-          </p>
-        </ScrollArea>
+        {/* 일정 정보 */}
+        <EventDetailContent schedule={schedule} />
 
         {/* 모집 마감 및 링크 블록 */}
         <div className="w-full flex flex-col items-start">
-          <p className="text-lg font-bold mb-6 text-black">
-            {schedule.registration_deadline
-              ? `${formatEventDate(schedule.registration_deadline)} 모집 마감`
-              : '상시 모집'}
-          </p>
-
           <div className="w-full bg-[#F8F9FA] rounded-3xl p-10 flex flex-col items-center gap-6 border border-gray-100">
             <div className="flex flex-col items-center gap-4 text-center">
               <div className="text-gray-400 scale-125">
@@ -263,40 +228,11 @@ export default function Event() {
         </div>
 
         {/* 참여자 명단 섹션 */}
-        <div className="w-full">
-          <div className="flex justify-between items-center mb-8 px-2">
-            <h2 className="font-bold text-2xl text-black">
-              {/* 신청 인원 필드 필요 */}
-              참여자 명단(8)
-            </h2>
-            <Button
-              variant="link"
-              onClick={() => navigate('guests')}
-              className="text-base font-bold text-black p-0 h-auto"
-            >
-              더보기
-            </Button>
-          </div>
-
-          {/* 링크 복사 블록과 같은 너비의 명단 박스 */}
-          <div className="border-2 border-black p-10 bg-white">
-            <div className="grid grid-cols-4 gap-8">
-              {displayGuests.map((p, idx) => (
-                <div key={idx} className="flex flex-col items-center gap-4">
-                  <Avatar className="w-16 h-16 border-none">
-                    <AvatarImage src={p.img} />
-                    <AvatarFallback className="bg-black text-white text-xs">
-                      {p.name}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm font-bold text-gray-700">
-                    {p.name}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        <GuestSummaryList
+          guests={displayGuests}
+          totalCount={8}
+          eventId={schedule.id}
+        />
       </div>
     </div>
   );
