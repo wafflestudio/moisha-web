@@ -77,7 +77,7 @@ export default function NewEvent() {
     }
   };
 
-  // TODO: Modularize the date & time picker components
+  // TODO: Add a validation logic
   // TODO: Add a vote system
   return (
     <div className="flex-1 flex justify-center">
