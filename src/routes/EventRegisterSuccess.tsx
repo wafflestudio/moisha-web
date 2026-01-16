@@ -1,9 +1,8 @@
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
+import EventDetailContent from '../components/EventDetailContent';
 import type { Events } from '../types/schema';
-import { formatEventDate } from '../utils/date';
 
 // shadcn UI 컴포넌트
 import {
@@ -45,7 +44,7 @@ export default function EventRegisterSuccess() {
       id: Number(id) || 1,
       title: '제2회 기획 세미나',
       description:
-        '일정 설명 일정설명 일정설명일정 설명 일정 설명 일정설명일정 설명 일정 설명 일정설명일정 설명 일정 설명 일정설명일정 설명 일정 설명 일정설명일정 설명 일정 설명 일정설명일정 설명 일정 설명 일정설명일정 설명 일정 설명 일정설명일정 설명 일정 설명 일정설명일정 설명 일정 설명 일정설명일정 설명 일정 설명 일정설명일정 설명 일정 설명 일정설명일정 설명 일정 설명 일정설명일정 설명 일정 설명 일정설명',
+        '일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 ...',
       location: '서울대',
       start_at: '2026-02-02T18:00:00Z',
       end_at: '2026-02-02T20:00:00Z',
@@ -87,34 +86,10 @@ export default function EventRegisterSuccess() {
           <h1 className="text-2xl sm:text-3xl font-bold flex-1 truncate text-black">
             {schedule.title}
           </h1>
-          <p className="text-lg sm:text-xl font-bold text-black">
-            일시 {formatEventDate(schedule.start_at)}
-          </p>
-          <p className="text-lg sm:text-xl font-bold text-black">
-            장소 {schedule.location || '미정'}
-          </p>
         </div>
 
-        {/* 신청 현황 버튼 */}
-        <button
-          onClick={() => navigate('guests')}
-          className="flex items-center text-lg font-bold group hover:opacity-70 transition-opacity"
-        >
-          {schedule.capacity}명 중{' '}
-          <span className="text-black ml-2 font-extrabold">
-            {/* 신청 인원 필드 필요 */} 8명 신청
-          </span>
-          <div className="rotate-180 ml-2 group-hover:translate-x-1 transition-transform text-black">
-            <IconChevronLeft />
-          </div>
-        </button>
-
-        {/* 상세 설명 */}
-        <ScrollArea className="h-40 w-full rounded-md border-none">
-          <p className="text-base text-gray-500 leading-relaxed whitespace-pre-wrap pr-4">
-            {schedule.description}
-          </p>
-        </ScrollArea>
+        {/* 일정 정보 */}
+        <EventDetailContent schedule={schedule} />
 
         {/* 취소 버튼 */}
         <AlertDialog>
@@ -123,7 +98,7 @@ export default function EventRegisterSuccess() {
               variant="secondary"
               className="w-full h-16 rounded-2xl bg-[#333333] hover:bg-black text-xl font-bold text-white transition-all shadow-lg active:scale-[0.98]"
             >
-              강제취소
+              취소하기
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
