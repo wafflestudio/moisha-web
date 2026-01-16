@@ -1,8 +1,8 @@
 import { Button } from '@/components/ui/button';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import EventDetailContent from '../components/EventDetailContent';
-import type { Events } from '../types/schema';
+import useEventDetail from '../hooks/useEventDetail';
 
 // shadcn UI 컴포넌트
 import {
@@ -36,29 +36,22 @@ const IconChevronLeft = () => (
 export default function EventRegisterSuccess() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [schedule, setSchedule] = useState<Events | null>(null);
+  const { loading, event, confirmedCount, handleFetchDetail } =
+    useEventDetail();
 
   useEffect(() => {
-    // Event.tsx와 동일한 구성의 Mock 데이터
-    const mockEvent: Events = {
-      id: Number(id) || 1,
-      title: '제2회 기획 세미나',
-      description:
-        '일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 ...',
-      location: '서울대',
-      start_at: '2026-02-02T18:00:00Z',
-      end_at: '2026-02-02T20:00:00Z',
-      capacity: 10,
-      waitlist_enabled: true,
-      registration_deadline: '2026-02-02T17:00:00Z',
-      created_by: 123,
-      created_at: '2026-01-14T00:00:00Z',
-      updated_at: '2026-01-14T00:00:00Z',
-    };
-    setSchedule(mockEvent);
-  }, [id]);
+    if (id) {
+      handleFetchDetail(id);
+    }
+  }, [id, handleFetchDetail]);
 
-  if (!schedule) return null;
+  if (loading || !event) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen relative pb-20">
@@ -84,12 +77,15 @@ export default function EventRegisterSuccess() {
         {/* 일정 정보 (왼쪽 정렬) */}
         <div className="text-left space-y-3 w-full">
           <h1 className="text-2xl sm:text-3xl font-bold flex-1 truncate text-black">
-            {schedule.title}
+            {event.title}
           </h1>
         </div>
 
         {/* 일정 정보 */}
-        <EventDetailContent schedule={schedule} />
+        <EventDetailContent
+          schedule={event}
+          currentParticipants={confirmedCount}
+        />
 
         {/* 취소 버튼 */}
         <AlertDialog>

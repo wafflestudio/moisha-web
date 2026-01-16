@@ -1,11 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import type { Guest } from '@/types/event';
 import { useNavigate } from 'react-router';
-
-interface Guest {
-  name: string;
-  img?: string;
-}
 
 interface Props {
   guests: Guest[];
@@ -42,13 +38,13 @@ export default function GuestSummaryList({
           {guests.map((p, idx) => (
             <div key={idx} className="flex flex-col items-center gap-4">
               <Avatar className="w-16 h-16 border-none">
-                <AvatarImage src={p.img} />
+                <AvatarImage src={p.guestEmail ?? undefined} />
                 <AvatarFallback className="bg-black text-white text-xs">
-                  {p.name.slice(0, 2)}
+                  {p.guestName?.slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
               <span className="text-sm font-bold text-gray-700 truncate w-full text-center">
-                {p.name}
+                {p.guestName}
               </span>
             </div>
           ))}
