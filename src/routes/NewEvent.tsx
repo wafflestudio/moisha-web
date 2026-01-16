@@ -115,11 +115,11 @@ export default function NewEvent() {
 
                 {/* 3. End date & time of the event */}
                 <Field orientation="horizontal">
+                  <FieldLabel>헤어지는 때도 입력하기</FieldLabel>
                   <Switch
                     defaultChecked={isBounded}
                     onCheckedChange={handleBoundedChange}
                   />
-                  <FieldLabel>헤어지는 때도 입력하기</FieldLabel>
                 </Field>
                 {isBounded && (
                   <Field>
@@ -195,11 +195,11 @@ export default function NewEvent() {
               <FieldGroup>
                 {/* 5. Start date & time of the registration */}
                 <Field orientation="horizontal">
+                  <FieldLabel>지금부터 모집하기</FieldLabel>
                   <Switch
                     defaultChecked={isFromNow}
                     onCheckedChange={handleFromNowChange}
                   />
-                  <FieldLabel>지금부터 모집하기</FieldLabel>
                 </Field>
                 {!isFromNow && (
                   <Field>
@@ -215,14 +215,16 @@ export default function NewEvent() {
                 )}
                 {/* 6. End date & time of the registration */}
                 <Field orientation="horizontal">
+                  <FieldContent>
+                    <FieldLabel>상시 모집하기</FieldLabel>
+                    <FieldDescription>
+                      일정을 만들고 나서도 언제든지 모집을 종료할 수 있어요.
+                    </FieldDescription>
+                  </FieldContent>
                   <Switch
                     defaultChecked={isAlwaysOpen}
                     onCheckedChange={handleAlwaysOpenChange}
                   />
-                  <FieldLabel>상시 모집하기</FieldLabel>
-                  <FieldDescription>
-                    일정을 만들고 나서도 언제든지 모집을 종료할 수 있어요.
-                  </FieldDescription>
                 </Field>
                 {!isAlwaysOpen && (
                   <Field>
