@@ -14,9 +14,14 @@ export default async function signup(
     formData.append('profileImage', data.profileImage);
   }
 
+  for (const pair of formData.entries()) {
+    console.info(pair[0] + ', ' + pair[1]);
+  }
+
   const response = await apiClient.post<SignUpResponse>(
     '/auth/signup',
     formData
   );
+
   return response.data;
 }
