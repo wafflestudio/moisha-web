@@ -17,9 +17,15 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
 export default function NewEvent() {
-  const [eventDate, setEventDate] = useState<Date | undefined>(undefined);
-  const [startDate, setStartDate] = useState<Date | undefined>(new Date());
-  const [endDate, setEndDate] = useState<Date | undefined>(new Date());
+  const [eventStartDate, setEventStartDate] = useState<Date | undefined>(
+    undefined
+  );
+  const [eventEndDate, setEventEndDate] = useState<Date | undefined>(undefined);
+  const [regiStartDate, setRegiStartDate] = useState<Date | undefined>(
+    new Date()
+  );
+  const [regiEndDate, setRegiEndDate] = useState<Date | undefined>(new Date());
+  const [isBounded, setIsBounded] = useState<boolean>(false);
   const [isFromNow, setIsFromNow] = useState<boolean>(false);
   const [isAlwaysOpen, setIsAlwaysOpen] = useState<boolean>(false);
 
@@ -30,11 +36,19 @@ export default function NewEvent() {
     console.info('Event created!');
   };
 
+  const handleBoundedChange = (checked: boolean) => {
+    setIsBounded(checked);
+
+    if (checked) {
+      setRegiEndDate(eventStartDate);
+    }
+  };
+
   const handleFromNowChange = (checked: boolean) => {
     setIsFromNow(checked);
 
     if (checked) {
-      setStartDate(new Date());
+      setRegiStartDate(new Date());
     }
   };
 
@@ -42,9 +56,9 @@ export default function NewEvent() {
     setIsAlwaysOpen(checked);
 
     if (checked) {
-      setEndDate(undefined);
+      setRegiEndDate(undefined);
     } else {
-      setEndDate(new Date());
+      setRegiEndDate(new Date());
     }
   };
 
@@ -80,19 +94,40 @@ export default function NewEvent() {
                   />
                 </Field>
 
-                {/* 2. Date & time of the event */}
+                {/* 2. Start date & time of the event */}
                 <Field>
                   <FieldLabel htmlFor="checkout-7j9-card-number-uw1">
                     만나는 때
                   </FieldLabel>
                   <DateTimePicker
-                    date={eventDate}
-                    setDate={setEventDate}
+                    date={eventStartDate}
+                    setDate={setEventStartDate}
                     placeholder="언제 모이나요?"
                   />
                 </Field>
 
-                {/* 3. Location of the event */}
+                {/* 3. End date & time of the event */}
+                <Field orientation="horizontal">
+                  <Switch
+                    defaultChecked={isBounded}
+                    onCheckedChange={handleBoundedChange}
+                  />
+                  <FieldLabel>헤어지는 때도 입력하기</FieldLabel>
+                </Field>
+                {isBounded && (
+                  <Field>
+                    <FieldLabel htmlFor="checkout-7j9-card-number-uw1">
+                      헤어지는 때
+                    </FieldLabel>
+                    <DateTimePicker
+                      date={eventEndDate}
+                      setDate={setEventEndDate}
+                      placeholder="언제 헤어지나요?"
+                    />
+                  </Field>
+                )}
+
+                {/* 4. Location of the event */}
                 <Field>
                   <FieldLabel htmlFor="checkout-exp-month-ts6">장소</FieldLabel>
                   <Input
@@ -101,7 +136,7 @@ export default function NewEvent() {
                   />
                 </Field>
 
-                {/* 4. Description of the event */}
+                {/* 5. Description of the event */}
                 <Field>
                   <FieldLabel htmlFor="checkout-7j9-card-name-43j">
                     설명
