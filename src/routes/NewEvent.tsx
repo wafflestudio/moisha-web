@@ -31,7 +31,7 @@ export default function NewEvent() {
     initialRegiEndDate
   );
   const [isBounded, setIsBounded] = useState<boolean>(false);
-  const [isFromNow, setIsFromNow] = useState<boolean>(false);
+  const [isFromNow, setIsFromNow] = useState<boolean>(true);
   const [isAlwaysOpen, setIsAlwaysOpen] = useState<boolean>(false);
 
   const navigate = useNavigate();
@@ -200,23 +200,13 @@ export default function NewEvent() {
 
             <FieldSet>
               <FieldLegend>모집 기간</FieldLegend>
-              <FieldDescription>
-                언제부터 언제까지 참가자를 모집할까요?
-              </FieldDescription>
               <FieldGroup>
                 {/* 8. Start date & time of the registration */}
-                <Field orientation="horizontal">
-                  <FieldLabel>지금부터 모집하기</FieldLabel>
-                  <Switch
-                    defaultChecked={isFromNow}
-                    onCheckedChange={handleFromNowChange}
-                  />
-                </Field>
                 {!isFromNow && (
-                  <Field>
-                    <FieldLabel htmlFor="checkout-7j9-card-number-uw1">
-                      시작일시
-                    </FieldLabel>
+                  <Field orientation="responsive">
+                    <FieldContent>
+                      <FieldLabel>시작일시</FieldLabel>
+                    </FieldContent>
                     <DateTimePicker
                       date={regiStartDate}
                       setDate={setRegiStartDate}
@@ -224,12 +214,39 @@ export default function NewEvent() {
                     />
                   </Field>
                 )}
+
                 {/* 9. End date & time of the registration */}
+                {!isAlwaysOpen && (
+                  <Field orientation="responsive">
+                    <FieldContent>
+                      <FieldLabel>마감일시</FieldLabel>
+                    </FieldContent>
+                    <DateTimePicker
+                      date={regiEndDate}
+                      setDate={setRegiEndDate}
+                      placeholder="언제 마감할까요?"
+                    />
+                  </Field>
+                )}
+
+                <Field orientation="horizontal">
+                  <FieldContent>
+                    <FieldLabel>지금부터 모집하기</FieldLabel>
+                    <FieldDescription>
+                      일정을 만든 즉시 참가 신청을 시작해요.
+                    </FieldDescription>
+                  </FieldContent>
+                  <Switch
+                    defaultChecked={isFromNow}
+                    onCheckedChange={handleFromNowChange}
+                  />
+                </Field>
+
                 <Field orientation="horizontal">
                   <FieldContent>
                     <FieldLabel>상시 모집하기</FieldLabel>
                     <FieldDescription>
-                      일정을 만들고 나서도 언제든지 모집을 종료할 수 있어요.
+                      일정을 만들고 나서도 언제든지 모집을 닫을 수 있어요.
                     </FieldDescription>
                   </FieldContent>
                   <Switch
@@ -237,18 +254,6 @@ export default function NewEvent() {
                     onCheckedChange={handleAlwaysOpenChange}
                   />
                 </Field>
-                {!isAlwaysOpen && (
-                  <Field>
-                    <FieldLabel htmlFor="checkout-7j9-card-number-uw1">
-                      마감일시
-                    </FieldLabel>
-                    <DateTimePicker
-                      date={regiEndDate}
-                      setDate={setRegiEndDate}
-                      placeholder="언제 끝낼까요?"
-                    />
-                  </Field>
-                )}
               </FieldGroup>
             </FieldSet>
             <Field orientation="horizontal">
