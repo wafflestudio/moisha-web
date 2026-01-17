@@ -64,6 +64,10 @@ export default function JoinEvent() {
     ]);
   }, [id]);
 
+  const handleClick = () => {
+    navigate(`register`);
+  };
+
   if (!schedule) return null;
 
   return (
@@ -91,7 +95,10 @@ export default function JoinEvent() {
         <EventDetailContent schedule={schedule} />
 
         {/* 신청하기 버튼*/}
-        <Button className="w-full h-16 rounded-2xl bg-black text-white text-xl font-bold">
+        <Button
+          onClick={handleClick}
+          className="w-full h-16 rounded-2xl bg-black text-white text-xl font-bold"
+        >
           신청하기
         </Button>
 

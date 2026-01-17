@@ -1,5 +1,6 @@
 import { createBrowserRouter } from 'react-router';
 import RootLayout from './layouts/RootLayout';
+import Dashboard from './routes/Dashboard';
 import Event from './routes/Event';
 import EventRegister from './routes/EventRegister';
 import EventRegisterSuccess from './routes/EventRegisterSuccess';
@@ -23,6 +24,7 @@ export const router = createBrowserRouter([
       { path: 'register/email', Component: RegisterForm },
       { path: 'new-event', Component: NewEvent },
       { path: 'auth/callback/:provider', Component: SocialCallback },
+      { path: 'test-main', Component: Dashboard }, // 테스트용 메인 페이지 라우트
     ],
   },
   {
@@ -40,6 +42,7 @@ export const router = createBrowserRouter([
       { index: true, Component: JoinEvent },
       { path: 'register', Component: EventRegister },
       { path: 'success', Component: EventRegisterSuccess },
+      { path: 'guests', Component: Guests },
     ],
   },
 ]);
