@@ -1,9 +1,9 @@
+import type { JoinEventRequest } from '@/types/events';
 import type { Event, Guest } from '@/types/schemas';
 import { isAxiosError } from 'axios';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import { getEventDetail, getRegistrations, registerEvent } from '../api/event';
-import type { JoinEventRequest } from '../types/event';
 
 type EventFetchStatus =
   | 'GUEST'
