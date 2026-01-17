@@ -1,4 +1,4 @@
-import type { User } from '@/types/schemas';
+import type { User } from '@/types/user';
 
 // ---------- /me ----------
 export type GetMeResponse = User;
