@@ -1,10 +1,9 @@
 import { Button } from '@/components/ui/button';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import EventDetailContent from '../components/EventDetailContent';
 import GuestSummaryList from '../components/GuestSummaryList';
-import useAuth from '../hooks/useAuth';
-import useEventDetail from '../hooks/useEventDetail';
+import type { Events } from '../types/schema';
 
 // SVG 아이콘 컴포넌트
 const IconChevronLeft = () => (
@@ -25,77 +24,47 @@ const IconChevronLeft = () => (
 export default function JoinEvent() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { isLoggedIn } = useAuth();
-  const {
-    loading,
-    event,
-    registrations,
-    confirmedCount,
-    handleFetchDetail,
-    handleJoinEvent,
-  } = useEventDetail();
+  const [schedule, setSchedule] = useState<Events | null>(null);
+  const [displayGuests, setDisplayGuests] = useState<
+    { name: string; img: string | undefined }[]
+  >([]);
 
-  // 초기 데이터 로드 및 리다이렉션 로직
   useEffect(() => {
-    if (!id) return;
-
-    const init = async () => {
-      const status = await handleFetchDetail(id);
-
-      // 백엔드 상태 코드 기반 분기 처리
-      switch (status) {
-        case 'ADMIN':
-          // 관리자라면 관리자 전용 상세 페이지로 리다이렉트
-          navigate(`/event/${id}`, { replace: true });
-          break;
-        case 'REGISTERED':
-          // 이미 신청한 사람이라면 성공 페이지로 리다이렉트
-          navigate(`/join/${id}/success`, { replace: true });
-          break;
-        case 'NOT_FOUND':
-          navigate('/', { replace: true });
-          break;
-        case 'ERROR':
-          // 에러 시 알림은 훅에서 toast로 처리하므로 메인으로만 이동
-          navigate('/');
-          break;
-        default:
-          // 'GUEST' (200 OK)인 경우에만 페이지에 머무름
-          break;
-      }
+    // 데이터 하드코딩
+    const mockEvent: Events = {
+      id: Number(id) || 1,
+      title: '제2회 기획 세미나',
+      description:
+        '일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 일정설명 ...',
+      location: '서울대',
+      start_at: '2026-02-02T18:00:00Z',
+      end_at: '2026-02-02T20:00:00Z',
+      capacity: 10,
+      waitlist_enabled: true,
+      registration_deadline: '2026-02-02T17:00:00Z',
+      created_by: 123, // 관리자 ID
+      created_at: '2026-01-14T00:00:00Z',
+      updated_at: '2026-01-14T00:00:00Z',
     };
 
-    init();
-  }, [id, handleFetchDetail, navigate]);
+    // 관리자 확인 로직
+    // if (!isLoggedIn || !isAdmin(mockData.ownerName)) {
+    //   alert('접근 권한이 없습니다. 관리자만 접근 가능합니다.');
+    //   navigate('/'); // 혹은 로그인 페이지로 이동
+    //   return;
+    // }
 
-  // 신청하기 버튼 핸들러
-  const onJoinClick = async () => {
-    if (!id) return;
+    setSchedule(mockEvent);
 
-    // 로그인 되어 있지 않으면 참여 신청 페이지(폼 입력)로 이동
-    if (!isLoggedIn) {
-      return navigate(`/join/${id}/register`);
-    }
+    setDisplayGuests([
+      { name: '이름1', img: undefined }, // profile_image가 null인 경우
+      { name: '이름2', img: 'https://via.placeholder.com/40' },
+      { name: '이름3', img: undefined },
+      { name: '이름4', img: undefined },
+    ]);
+  }, [id]);
 
-    // 로그인 되어 있으면 즉시 API 호출
-    const success = await handleJoinEvent(id, {
-      guestName: null,
-      guestEmail: null,
-    });
-
-    if (success) {
-      navigate(`/join/${id}/success`);
-    }
-  };
-
-  // 로딩 중이거나 데이터가 아직 없을 때 (리다이렉트 판단 전) 스피너나 빈 화면 표시
-  if (loading || !event) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black" />
-      </div>
-    );
-  }
+  if (!schedule) return null;
 
   return (
     <div className="min-h-screen bg-white flex flex-col relative pb-20">
@@ -111,7 +80,7 @@ export default function JoinEvent() {
             <IconChevronLeft />
           </Button>
           <h1 className="text-2xl sm:text-3xl font-bold flex-1 ml-4 truncate text-black">
-            {event.title}
+            {schedule.title}
           </h1>
         </div>
       </div>
@@ -119,25 +88,18 @@ export default function JoinEvent() {
       {/* 메인 콘텐츠 */}
       <div className="max-w-2xl min-w-[320px] mx-auto w-[90%] px-6 flex flex-col gap-10">
         {/* 일정 정보 */}
-        <EventDetailContent
-          schedule={event}
-          currentParticipants={confirmedCount}
-        />
+        <EventDetailContent schedule={schedule} />
 
         {/* 신청하기 버튼*/}
-        <Button
-          onClick={onJoinClick}
-          disabled={loading}
-          className="w-full h-16 rounded-2xl bg-black text-white text-xl font-bold"
-        >
-          {loading ? '처리 중...' : '신청하기'}
+        <Button className="w-full h-16 rounded-2xl bg-black text-white text-xl font-bold">
+          신청하기
         </Button>
 
         {/* 참여자 명단 섹션 */}
         <GuestSummaryList
-          guests={registrations}
-          totalCount={confirmedCount}
-          eventId={event.id}
+          guests={displayGuests}
+          totalCount={8}
+          eventId={schedule.id}
         />
       </div>
     </div>

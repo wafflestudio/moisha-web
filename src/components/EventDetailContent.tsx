@@ -1,11 +1,10 @@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useNavigate } from 'react-router';
-import type { Event } from '../types/event';
+import type { Events } from '../types/schema';
 import { formatEventDate } from '../utils/date';
 
-interface EventDetailContentProps {
-  schedule: Event;
-  currentParticipants: number;
+interface Props {
+  schedule: Events;
 }
 
 // 아이콘
@@ -24,10 +23,7 @@ const IconChevronLeft = () => (
   </svg>
 );
 
-export default function EventDetailContent({
-  schedule,
-  currentParticipants,
-}: EventDetailContentProps) {
+export default function EventDetailContent({ schedule }: Props) {
   const navigate = useNavigate();
 
   return (
@@ -35,7 +31,7 @@ export default function EventDetailContent({
       {/* 1. 일시 및 장소 */}
       <div className="text-left space-y-3 w-full">
         <p className="text-lg sm:text-xl font-bold text-black">
-          일시 {formatEventDate(schedule.startAt)}
+          일시 {formatEventDate(schedule.start_at)}
         </p>
         <p className="text-lg sm:text-xl font-bold text-black">
           장소 {schedule.location || '미정'}
@@ -44,12 +40,12 @@ export default function EventDetailContent({
 
       {/* 2. 신청 현황 버튼 */}
       <button
-        onClick={() => navigate(`/event/${schedule.id}/guests`)}
+        onClick={() => navigate('guests')}
         className="flex items-center text-lg font-bold group hover:opacity-70 transition-opacity"
       >
         {schedule.capacity}명 중{' '}
         <span className="text-black ml-2 font-extrabold">
-          {currentParticipants}명 신청
+          {/* 신청 인원 필드 필요 */}8명 신청
         </span>
         <div className="rotate-180 ml-2 group-hover:translate-x-1 transition-transform text-black">
           <IconChevronLeft />
@@ -65,8 +61,8 @@ export default function EventDetailContent({
 
       {/* 4. 마감 정보 (버튼 상단 문구) */}
       <p className="text-lg font-bold text-black">
-        {schedule.registrationDeadline
-          ? `${formatEventDate(schedule.registrationDeadline)} 모집 마감`
+        {schedule.registration_deadline
+          ? `${formatEventDate(schedule.registration_deadline)} 모집 마감`
           : '상시 모집'}
       </p>
     </div>
