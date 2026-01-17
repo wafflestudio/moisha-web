@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { Link, Navigate } from 'react-router';
+import { Link } from 'react-router';
 import { useNavigate } from 'react-router';
 import { GOOGLE_AUTH_URL, KAKAO_AUTH_URL } from '../constants/auth';
-import useAuth from '../hooks/useAuth';
 
 export default function Login() {
   const [username, setUsername] = useState('');
