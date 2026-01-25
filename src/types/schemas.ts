@@ -1,6 +1,6 @@
 export type UserId = number;
 export type EventId = string;
-export type RegistrationId = string;
+type RegistrationId = string;
 
 export type GuestStatus = 'CONFIRMED' | 'WAITLISTED' | 'CANCELED' | 'BANNED';
 
