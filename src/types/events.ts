@@ -63,13 +63,13 @@ type viewerStatus =
   | 'BANNED'
   | 'NONE';
 
-// ---------- PUT /:eventId ----------
+// ---------- PUT /:id ----------
 
 export interface UpdateEventRequest extends Event {
   waitlistEnabled: boolean;
 }
 
-export interface UpdateEventRequest extends Event {
+export interface UpdateEventResponse extends Event {
   waitlistEnabled: boolean;
 }
 
