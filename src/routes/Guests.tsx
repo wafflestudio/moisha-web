@@ -17,89 +17,9 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-
-// SVG 아이콘 컴포넌트
-const IconChevronLeft = () => (
-  <svg
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="m15 18-6-6 6-6" />
-  </svg>
-);
-
-// interface GuestResponse {
-//   registration_id: number;
-//   name: string;
-//   email: string | null;
-//   profile_image: string | null;
-// }
+import { ChevronLeftIcon } from 'lucide-react';
 
 export default function Guests() {
-  // const [guests, setGuests] = useState<GuestResponse[]>([]);
-
-  // useEffect(() => {
-  //   // 데이터 하드코딩
-  //   const mockGuests: GuestResponse[] = [
-  //     {
-  //       registration_id: 1,
-  //       name: '이준엽',
-  //       email: 'jun411@snu.ac.kr',
-  //       profile_image: 'https://github.com/shadcn.png',
-  //     },
-  //     {
-  //       registration_id: 2,
-  //       name: '이름2',
-  //       email: '이메일@example.com',
-  //       profile_image: null,
-  //     },
-  //     {
-  //       registration_id: 3,
-  //       name: '이름3',
-  //       email: '이메일@example.com',
-  //       profile_image: null,
-  //     },
-  //     {
-  //       registration_id: 4,
-  //       name: '이름4',
-  //       email: '이메일@example.com',
-  //       profile_image: null,
-  //     },
-  //     {
-  //       registration_id: 5,
-  //       name: '이름5',
-  //       email: null,
-  //       profile_image: null,
-  //     },
-  //     {
-  //       registration_id: 6,
-  //       name: '이름6',
-  //       email: '이메일@example.com',
-  //       profile_image: null,
-  //     },
-  //     {
-  //       registration_id: 7,
-  //       name: '이름7',
-  //       email: '이메일@example.com',
-  //       profile_image: null,
-  //     },
-  //     {
-  //       registration_id: 8,
-  //       name: '이름8',
-  //       email: '이메일@example.com',
-  //       profile_image: null,
-  //     },
-  //   ];
-
-  //   setGuests(mockGuests);
-  // }, []);
-
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const {
@@ -139,7 +59,7 @@ export default function Guests() {
             onClick={() => navigate(-1)}
             className="rounded-full"
           >
-            <IconChevronLeft />
+            <ChevronLeftIcon />
           </Button>
           <h1 className="text-2xl sm:text-3xl font-bold ml-4 text-black">
             참여자 명단({guests.length})
