@@ -70,15 +70,15 @@ export default function SimpleDateTimePicker(props: SimpleDateTimePickerProps) {
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0">
-        <div className="sm:flex">
+        <div className="md:flex">
           <Calendar
             mode="single"
             selected={value}
             onSelect={handleDateSelect}
           />
-          <div className="flex flex-col sm:flex-row sm:h-[300px] divide-y sm:divide-y-0 sm:divide-x">
-            <ScrollArea className="w-64 sm:w-auto">
-              <div className="flex sm:flex-col p-2">
+          <div className="flex flex-col md:flex-row md:h-[300px] divide-y md:divide-y-0 md:divide-x">
+            <ScrollArea className="w-64 md:w-auto">
+              <div className="flex md:flex-col p-2">
                 {hours.reverse().map((hour) => (
                   <Button
                     key={hour}
@@ -88,17 +88,17 @@ export default function SimpleDateTimePicker(props: SimpleDateTimePickerProps) {
                         ? 'default'
                         : 'ghost'
                     }
-                    className="sm:w-full shrink-0 aspect-square"
+                    className="md:w-full shrink-0 aspect-square"
                     onClick={() => handleTimeChange('hour', hour.toString())}
                   >
                     {hour}
                   </Button>
                 ))}
               </div>
-              <ScrollBar orientation="horizontal" className="sm:hidden" />
+              <ScrollBar orientation="horizontal" className="md:hidden" />
             </ScrollArea>
-            <ScrollArea className="w-64 sm:w-auto">
-              <div className="flex sm:flex-col p-2">
+            <ScrollArea className="w-64 md:w-auto">
+              <div className="flex md:flex-col p-2">
                 {Array.from({ length: 12 }, (_, i) => i * 5).map((minute) => (
                   <Button
                     key={minute}
@@ -108,7 +108,7 @@ export default function SimpleDateTimePicker(props: SimpleDateTimePickerProps) {
                         ? 'default'
                         : 'ghost'
                     }
-                    className="sm:w-full shrink-0 aspect-square"
+                    className="md:w-full shrink-0 aspect-square"
                     onClick={() =>
                       handleTimeChange('minute', minute.toString())
                     }
@@ -117,10 +117,10 @@ export default function SimpleDateTimePicker(props: SimpleDateTimePickerProps) {
                   </Button>
                 ))}
               </div>
-              <ScrollBar orientation="horizontal" className="sm:hidden" />
+              <ScrollBar orientation="horizontal" className="md:hidden" />
             </ScrollArea>
             <ScrollArea className="">
-              <div className="flex sm:flex-col p-2">
+              <div className="flex md:flex-col p-2">
                 {['AM', 'PM'].map((ampm) => (
                   <Button
                     key={ampm}
@@ -132,7 +132,7 @@ export default function SimpleDateTimePicker(props: SimpleDateTimePickerProps) {
                         ? 'default'
                         : 'ghost'
                     }
-                    className="sm:w-full shrink-0 aspect-square"
+                    className="md:w-full shrink-0 aspect-square"
                     onClick={() => handleTimeChange('ampm', ampm)}
                   >
                     {ampm}
