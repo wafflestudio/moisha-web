@@ -9,7 +9,7 @@ import {
   X,
 } from 'lucide-react';
 import { type ComponentProps, useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { useLocation, useNavigate, useParams } from 'react-router';
 import { toast } from 'sonner';
 
 // Hooks
@@ -44,7 +44,9 @@ import { formatEventDate, getRemainingTime } from '@/utils/date';
 export default function EventMain() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
+  const fromHome = location.state?.fromHome;
   const { user, isLoggedIn } = useAuth();
   const { removeGuestRegistration } = useAuthStore();
 
@@ -158,14 +160,18 @@ export default function EventMain() {
   return (
     <div className="flex flex-col pb-40">
       {/* 1. 상단 네비게이션 */}
-      {view === 'ADMIN' && (
+      {(fromHome || view === 'ADMIN') && (
         <Subheader
           title={event.title}
           onBackClick={() => navigate('/')}
-          dropdownOptions={{
-            onEditClick: () => navigate('edit'),
-            onDeleteClick: onDeleteClick,
-          }}
+          dropdownOptions={
+            view === 'ADMIN'
+              ? {
+                  onEditClick: () => navigate('edit'),
+                  onDeleteClick: onDeleteClick,
+                }
+              : undefined
+          }
         />
       )}
 
