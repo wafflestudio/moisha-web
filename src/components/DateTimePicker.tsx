@@ -49,7 +49,12 @@ export function DateTimePicker({
               if (selectedDate) {
                 const current = value ?? new Date();
                 const combined = new Date(selectedDate);
-                combined.setHours(current.getHours(), current.getMinutes(), 0, 0);
+                combined.setHours(
+                  current.getHours(),
+                  current.getMinutes(),
+                  0,
+                  0
+                );
                 onChange(combined);
               }
               setOpen(false);
