@@ -6,6 +6,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { ko } from 'date-fns/locale';
 import { CalendarIcon } from 'lucide-react';
 import { useState } from 'react';
 
@@ -44,6 +45,11 @@ export function DateTimePicker({
             mode="single"
             selected={value}
             captionLayout="dropdown"
+            locale={ko}
+            formatters={{
+              formatMonthDropdown: (month) =>
+                month.toLocaleString('ko-KR', { month: 'long' }),
+            }}
             defaultMonth={value}
             onSelect={(selectedDate) => {
               if (selectedDate) {
