@@ -178,7 +178,11 @@ export default function Guests() {
               목록을 더 불러오고 있습니다...
             </p>
           ) : (
-            <p className="text-gray-400 text-sm">마지막 참여자입니다.</p>
+            <p className="text-gray-400 text-sm">
+              {activeTab === 'WAITLISTED'
+                ? '마지막 대기자입니다.'
+                : '마지막 참여자입니다.'}
+            </p>
           )}
         </div>
       </div>

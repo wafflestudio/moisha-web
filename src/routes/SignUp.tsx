@@ -222,7 +222,7 @@ export default function SignUp() {
               }`}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="8자 이상, 숫자 포함"
+              placeholder="8자 이상, 영문, 숫자 포함"
             />
 
             {showErrors && !password && (
@@ -238,7 +238,7 @@ export default function SignUp() {
                 <li
                   className={`text-xs flex items-center ${validations.password.hasNumber ? 'text-green-600' : 'text-gray-400'}`}
                 >
-                  {validations.password.hasNumber ? '✓' : '○'} 숫자 포함
+                  {validations.password.hasNumber ? '✓' : '○'} 영문, 숫자 포함
                 </li>
               </ul>
             )}

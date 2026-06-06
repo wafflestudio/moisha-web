@@ -377,7 +377,7 @@ ${event.description}`;
     navigator.clipboard.writeText(textToCopy);
     toast.success('링크가 복사되었습니다!', {
       description: copyDetail
-        ? '모임 내용이 포함되었습니다.'
+        ? '모임 상세정보가 포함되었습니다.'
         : '참여자에게 주소를 공유해 보세요.',
     });
   };
@@ -430,7 +430,7 @@ ${event.description}`;
             htmlFor="copy"
             className="body-base text-[#1e1e1e] cursor-pointer"
           >
-            모임 내용 텍스트 함께 복사하기
+            모임 상세정보 함께 복사하기
           </label>
         </div>
         <Button

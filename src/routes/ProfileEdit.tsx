@@ -195,9 +195,13 @@ export default function SignUp() {
                   {validations.password.isLongEnough ? '✓' : '○'} 8자 이상
                 </li>
                 <li
-                  className={`text-xs flex items-center ${validations.password.hasNumber ? 'text-green-600' : 'text-gray-400'}`}
+                  className={
+                    validations.password.hasNumber
+                      ? 'text-green-500'
+                      : 'text-gray-400'
+                  }
                 >
-                  {validations.password.hasNumber ? '✓' : '○'} 숫자 포함
+                  {validations.password.hasNumber ? '✓' : '○'} 영문, 숫자 포함
                 </li>
               </ul>
             )}
