@@ -45,7 +45,7 @@ export default function Login() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="8자 이상, 숫자 포함"
+                placeholder="8자 이상, 영문, 숫자 포함"
                 required
               />
             </Field>
