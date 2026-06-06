@@ -1,5 +1,4 @@
 import { InputWithPlusMinusButtons } from '@/components/InputWithPlusMinusButtton';
-import SimpleDateTimePicker from '@/components/SimpleDateTimePicker';
 import Subheader from '@/components/Subheader';
 import {
   AlertDialog,
@@ -12,6 +11,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import {
   Field,
   FieldContent,
@@ -21,14 +21,26 @@ import {
   FieldSet,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { formatEventDate } from '@/utils/date';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { CalendarIcon } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
+
+function format(date: Date) {
+  return date.toLocaleString('ko-KR', {
+    dateStyle: 'medium',
+  });
+}
 
 const baseSchema = z.object({
   title: z
@@ -133,6 +145,10 @@ export function EventForm({
 }: EventFormProps) {
   const [step, setStep] = useState<1 | 2>(1);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [eventStartOpen, setEventStartOpen] = useState(false);
+  const [eventEndOpen, setEventEndOpen] = useState(false);
+  const [regiStartOpen, setRegiStartOpen] = useState(false);
+  const [regiEndOpen, setRegiEndOpen] = useState(false);
 
   const schema = useMemo(() => createFormSchema(mode), [mode]);
 
@@ -368,18 +384,76 @@ export function EventForm({
 
                   {/* Event Start */}
                   <Field className="gap-1.5">
-                    <FieldLabel htmlFor="eventStartDate">
-                      모임 시작일시
+                    <FieldLabel className="gap-0.5">
+                      <span>모임 시작일시</span>
+                      <span className="text-destructive">*</span>
                     </FieldLabel>
                     <Controller
                       control={control}
                       name="eventStartDate"
                       render={({ field }) => (
-                        <SimpleDateTimePicker
-                          value={field.value}
-                          onChange={field.onChange}
-                          placeholder="언제 모이나요?"
-                        />
+                        <div className="flex gap-2">
+                          <Popover
+                            open={eventStartOpen}
+                            onOpenChange={setEventStartOpen}
+                          >
+                            <PopoverTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className="flex-1 justify-between font-normal"
+                              >
+                                {field.value
+                                  ? format(field.value)
+                                  : '언제 모이나요?'}
+                                <CalendarIcon />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent
+                              className="w-auto overflow-hidden p-0"
+                              align="start"
+                            >
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                captionLayout="dropdown"
+                                defaultMonth={field.value}
+                                onSelect={(selectedDate) => {
+                                  if (selectedDate) {
+                                    const current = field.value ?? new Date();
+                                    const combined = new Date(selectedDate);
+                                    combined.setHours(
+                                      current.getHours(),
+                                      current.getMinutes(),
+                                      0,
+                                      0
+                                    );
+                                    field.onChange(combined);
+                                  }
+                                  setEventStartOpen(false);
+                                }}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <Input
+                            type="time"
+                            className="w-32 appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+                            value={
+                              field.value
+                                ? `${String(field.value.getHours()).padStart(2, '0')}:${String(field.value.getMinutes()).padStart(2, '0')}`
+                                : ''
+                            }
+                            onChange={(e) => {
+                              const [hours, minutes] = e.target.value
+                                .split(':')
+                                .map(Number);
+                              const current = field.value ?? new Date();
+                              const combined = new Date(current);
+                              combined.setHours(hours, minutes, 0, 0);
+                              field.onChange(combined);
+                            }}
+                          />
+                        </div>
                       )}
                     />
                     {errors.eventStartDate && (
@@ -417,11 +491,69 @@ export function EventForm({
                           control={control}
                           name="eventEndDate"
                           render={({ field }) => (
-                            <SimpleDateTimePicker
-                              value={field.value}
-                              onChange={field.onChange}
-                              placeholder="언제 헤어지나요?"
-                            />
+                            <div className="flex gap-2">
+                              <Popover
+                                open={eventEndOpen}
+                                onOpenChange={setEventEndOpen}
+                              >
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="flex-1 justify-between font-normal"
+                                  >
+                                    {field.value
+                                      ? format(field.value)
+                                      : '언제 헤어지나요?'}
+                                    <CalendarIcon />
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent
+                                  className="w-auto overflow-hidden p-0"
+                                  align="start"
+                                >
+                                  <Calendar
+                                    mode="single"
+                                    selected={field.value}
+                                    captionLayout="dropdown"
+                                    defaultMonth={field.value}
+                                    onSelect={(selectedDate) => {
+                                      if (selectedDate) {
+                                        const current =
+                                          field.value ?? new Date();
+                                        const combined = new Date(selectedDate);
+                                        combined.setHours(
+                                          current.getHours(),
+                                          current.getMinutes(),
+                                          0,
+                                          0
+                                        );
+                                        field.onChange(combined);
+                                      }
+                                      setEventEndOpen(false);
+                                    }}
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                              <Input
+                                type="time"
+                                className="w-32 appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+                                value={
+                                  field.value
+                                    ? `${String(field.value.getHours()).padStart(2, '0')}:${String(field.value.getMinutes()).padStart(2, '0')}`
+                                    : ''
+                                }
+                                onChange={(e) => {
+                                  const [hours, minutes] = e.target.value
+                                    .split(':')
+                                    .map(Number);
+                                  const current = field.value ?? new Date();
+                                  const combined = new Date(current);
+                                  combined.setHours(hours, minutes, 0, 0);
+                                  field.onChange(combined);
+                                }}
+                              />
+                            </div>
                           )}
                         />
                         {errors.eventEndDate && (
@@ -525,12 +657,68 @@ export function EventForm({
                         control={control}
                         name="regiStartDate"
                         render={({ field }) => (
-                          <SimpleDateTimePicker
-                            value={field.value}
-                            onChange={field.onChange}
-                            placeholder="언제 시작할까요?"
-                            disabled={isFromNow}
-                          />
+                          <div className="flex gap-2">
+                            <Popover
+                              open={regiStartOpen}
+                              onOpenChange={setRegiStartOpen}
+                            >
+                              <PopoverTrigger asChild>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  className="flex-1 justify-between font-normal"
+                                >
+                                  {field.value
+                                    ? format(field.value)
+                                    : '언제 시작할까요?'}
+                                  <CalendarIcon />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent
+                                className="w-auto overflow-hidden p-0"
+                                align="start"
+                              >
+                                <Calendar
+                                  mode="single"
+                                  selected={field.value}
+                                  captionLayout="dropdown"
+                                  defaultMonth={field.value}
+                                  onSelect={(selectedDate) => {
+                                    if (selectedDate) {
+                                      const current = field.value ?? new Date();
+                                      const combined = new Date(selectedDate);
+                                      combined.setHours(
+                                        current.getHours(),
+                                        current.getMinutes(),
+                                        0,
+                                        0
+                                      );
+                                      field.onChange(combined);
+                                    }
+                                    setRegiStartOpen(false);
+                                  }}
+                                />
+                              </PopoverContent>
+                            </Popover>
+                            <Input
+                              type="time"
+                              className="w-32 appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+                              value={
+                                field.value
+                                  ? `${String(field.value.getHours()).padStart(2, '0')}:${String(field.value.getMinutes()).padStart(2, '0')}`
+                                  : ''
+                              }
+                              onChange={(e) => {
+                                const [hours, minutes] = e.target.value
+                                  .split(':')
+                                  .map(Number);
+                                const current = field.value ?? new Date();
+                                const combined = new Date(current);
+                                combined.setHours(hours, minutes, 0, 0);
+                                field.onChange(combined);
+                              }}
+                            />
+                          </div>
                         )}
                       />
                       {errors.regiStartDate && (
@@ -551,14 +739,70 @@ export function EventForm({
                       control={control}
                       name="regiEndDate"
                       render={({ field }) => (
-                        <SimpleDateTimePicker
-                          value={field.value}
-                          onChange={(date) => {
-                            field.onChange(date);
-                            userTouchedRegiEndDate.current = true;
-                          }}
-                          placeholder="언제 마감할까요?"
-                        />
+                        <div className="flex gap-2">
+                          <Popover
+                            open={regiEndOpen}
+                            onOpenChange={setRegiEndOpen}
+                          >
+                            <PopoverTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className="flex-1 justify-between font-normal"
+                              >
+                                {field.value
+                                  ? format(field.value)
+                                  : '언제 마감할까요?'}
+                                <CalendarIcon />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent
+                              className="w-auto overflow-hidden p-0"
+                              align="start"
+                            >
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                captionLayout="dropdown"
+                                defaultMonth={field.value}
+                                onSelect={(selectedDate) => {
+                                  if (selectedDate) {
+                                    const current = field.value ?? new Date();
+                                    const combined = new Date(selectedDate);
+                                    combined.setHours(
+                                      current.getHours(),
+                                      current.getMinutes(),
+                                      0,
+                                      0
+                                    );
+                                    field.onChange(combined);
+                                    userTouchedRegiEndDate.current = true;
+                                  }
+                                  setRegiEndOpen(false);
+                                }}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <Input
+                            type="time"
+                            className="w-32 appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+                            value={
+                              field.value
+                                ? `${String(field.value.getHours()).padStart(2, '0')}:${String(field.value.getMinutes()).padStart(2, '0')}`
+                                : ''
+                            }
+                            onChange={(e) => {
+                              const [hours, minutes] = e.target.value
+                                .split(':')
+                                .map(Number);
+                              const current = field.value ?? new Date();
+                              const combined = new Date(current);
+                              combined.setHours(hours, minutes, 0, 0);
+                              field.onChange(combined);
+                              userTouchedRegiEndDate.current = true;
+                            }}
+                          />
+                        </div>
                       )}
                     />
                     {errors.regiEndDate && (
