@@ -46,6 +46,8 @@ export function DateTimePicker({
             selected={value}
             captionLayout="dropdown"
             locale={ko}
+            startMonth={new Date(new Date().getFullYear() - 1, 0)}
+            endMonth={new Date(new Date().getFullYear() + 5, 11)}
             formatters={{
               formatMonthDropdown: (month) =>
                 month.toLocaleString('ko-KR', { month: 'long' }),
