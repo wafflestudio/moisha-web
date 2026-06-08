@@ -1,11 +1,24 @@
 import ProfileButton from '@/components/ProfileButton';
 import { Button } from '@/components/ui/button';
 import useAuth from '@/hooks/useAuth';
+import useAuthStore from '@/hooks/useAuthStore';
 import { useEffect } from 'react';
-import { Link } from 'react-router';
+import { Link, useLocation } from 'react-router';
 
 export default function Header() {
-  const { user, isLoggedIn, handleLogout, refreshUser } = useAuth();
+  const { user, handleLogout, refreshUser } = useAuth();
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const setRedirectUrl = useAuthStore((state) => state.setRedirectUrl);
+  const location = useLocation();
+
+  const handleAuthClick = () => {
+    const eventMatch = location.pathname.match(/^\/event\/([^\/]+)/);
+    if (eventMatch) {
+      setRedirectUrl(`/event/${eventMatch[1]}`);
+    } else {
+      setRedirectUrl(null);
+    }
+  };
 
   useEffect(() => {
     // 1. 로그인 상태가 아니면 타이머를 돌릴 필요가 없음
@@ -24,21 +37,25 @@ export default function Header() {
   }, [isLoggedIn, refreshUser]);
 
   return (
-    <header className="sticky top-0 z-40 flex w-full justify-center border bg-white">
-      <div className="flex w-full items-center justify-between px-6 py-4 sm:w-screen-sm md:w-screen-md lg:w-screen-lg xl:max-w-screen-xl">
-        <Link to="/" className="flex items-center space-x-2">
+    <header className="sticky top-0 z-40 flex w-full h-16 justify-center border-b box-content bg-white">
+      <div className="flex w-full h-full items-center justify-between px-6 sm:w-screen-sm md:w-screen-md lg:w-screen-lg xl:max-w-screen-xl">
+        <Link
+          to="/"
+          className="flex items-center space-x-2"
+          onClick={() => setRedirectUrl(null)}
+        >
           <img src="/moiming-symbol.svg" alt="logo" />
           <p className="moiming">모이밍</p>
         </Link>
         <div className="flex items-center gap-1.5">
           {!isLoggedIn || !user ? (
             <>
-              <Link to="/login">
+              <Link to="/login" onClick={handleAuthClick}>
                 <Button variant="ghost" className="px-2 py-2">
                   <span className="single-line-body-base">로그인</span>
                 </Button>
               </Link>
-              <Link to="/">
+              <Link to="/sign-up" onClick={handleAuthClick}>
                 <Button variant="ghost" className="px-2 py-2">
                   <span className="single-line-body-base">회원가입</span>
                 </Button>

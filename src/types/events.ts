@@ -24,7 +24,8 @@ export interface EventDetailResponse {
 export interface DetailedEvent extends Event {
   publicId: EventId;
   description?: string;
-  totalApplicants: number;
+  confirmedCount: number;
+  waitlistCount: number;
 }
 
 interface Creator {
@@ -78,6 +79,8 @@ export interface UpdateEventResponse extends Event {
 
 export interface MyEventsResponse {
   events: MyEvent[];
+  nextCursor?: string;
+  hasNext: boolean;
 }
 
 export interface MyEvent {
@@ -86,7 +89,8 @@ export interface MyEvent {
   startsAt?: string;
   endsAt?: string;
   capacity: number;
-  totalApplicants: number;
+  confirmedCount: number;
+  waitlistCount: number;
   registrationStartsAt: string;
   registrationEndsAt: string;
 }

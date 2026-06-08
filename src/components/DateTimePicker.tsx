@@ -1,179 +1,91 @@
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
+import { Input } from '@/components/ui/input';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { cn } from '@/lib/utils';
+import { ko } from 'date-fns/locale';
+import { CalendarIcon } from 'lucide-react';
 import { useState } from 'react';
 
+function formatDate(date: Date) {
+  return date.toLocaleString('ko-KR', { dateStyle: 'medium' });
+}
+
 interface DateTimePickerProps {
-  value: Date | undefined;
+  value?: Date;
   onChange: (date: Date) => void;
-  renderTrigger?: (props: {
-    value: Date | undefined;
-    open: boolean;
-    setOpen: (open: boolean) => void;
-  }) => React.ReactNode;
   placeholder?: string;
-  id?: string;
-  disabled?: boolean;
 }
 
 export function DateTimePicker({
   value,
   onChange,
-  renderTrigger,
-  placeholder,
-  id,
-  disabled,
+  placeholder = '날짜 선택',
 }: DateTimePickerProps) {
   const [open, setOpen] = useState(false);
 
-  const hours = Array.from({ length: 12 }, (_, i) => i + 1);
-
-  const handleDateSelect = (selectedDate: Date | undefined) => {
-    if (selectedDate) {
-      // Preserve time from current date if exists
-      const newDate = new Date(selectedDate);
-      if (value) {
-        newDate.setHours(value.getHours());
-        newDate.setMinutes(value.getMinutes());
-      }
-      onChange(newDate);
-    }
-  };
-
-  const handleTimeChange = (
-    type: 'hour' | 'minute' | 'ampm',
-    valStr: string
-  ) => {
-    if (value) {
-      const newDate = new Date(value);
-      if (type === 'hour') {
-        const val = parseInt(valStr);
-        const currentHours = newDate.getHours();
-        const isPM = currentHours >= 12;
-
-        if (isPM) {
-          if (val === 12) newDate.setHours(12);
-          else newDate.setHours(val + 12);
-        } else {
-          if (val === 12) newDate.setHours(0);
-          else newDate.setHours(val);
-        }
-      } else if (type === 'minute') {
-        newDate.setMinutes(parseInt(valStr));
-      } else if (type === 'ampm') {
-        const currentHours = newDate.getHours();
-        if (valStr === 'PM' && currentHours < 12) {
-          newDate.setHours(currentHours + 12);
-        } else if (valStr === 'AM' && currentHours >= 12) {
-          newDate.setHours(currentHours - 12);
-        }
-      }
-      onChange(newDate);
-    }
-  };
-
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <div className="w-full">
-          {renderTrigger ? (
-            renderTrigger({ value, open, setOpen })
-          ) : (
-            <Button
-              id={id}
-              variant="outline"
-              disabled={disabled}
-              className={cn(
-                'w-full justify-start text-left single-line-body-base',
-                !value && 'text-muted-foreground'
-              )}
-            >
-              {value ? value.toLocaleString() : placeholder}
-            </Button>
-          )}
-        </div>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        <div className="sm:flex">
+    <div className="flex gap-2">
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            className="flex-1 justify-between font-normal"
+          >
+            {value ? formatDate(value) : placeholder}
+            <CalendarIcon />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto overflow-hidden p-0" align="start">
           <Calendar
             mode="single"
             selected={value}
-            onSelect={handleDateSelect}
-            initialFocus
+            captionLayout="dropdown"
+            locale={ko}
+            startMonth={new Date(new Date().getFullYear() - 1, 0)}
+            endMonth={new Date(new Date().getFullYear() + 5, 11)}
+            formatters={{
+              formatMonthDropdown: (month) =>
+                month.toLocaleString('ko-KR', { month: 'long' }),
+            }}
+            defaultMonth={value}
+            onSelect={(selectedDate) => {
+              if (selectedDate) {
+                const current = value ?? new Date();
+                const combined = new Date(selectedDate);
+                combined.setHours(
+                  current.getHours(),
+                  current.getMinutes(),
+                  0,
+                  0
+                );
+                onChange(combined);
+              }
+              setOpen(false);
+            }}
           />
-          <div className="flex flex-col sm:flex-row sm:h-[300px] divide-y sm:divide-y-0 sm:divide-x">
-            <ScrollArea className="w-64 sm:w-auto">
-              <div className="flex sm:flex-col p-2">
-                {hours.map((hour) => (
-                  <Button
-                    key={hour}
-                    size="icon"
-                    variant={
-                      value && value.getHours() % 12 === hour % 12
-                        ? 'default'
-                        : 'ghost'
-                    }
-                    className="sm:w-full shrink-0 aspect-square"
-                    onClick={() => handleTimeChange('hour', hour.toString())}
-                  >
-                    {hour}
-                  </Button>
-                ))}
-              </div>
-              <ScrollBar orientation="horizontal" className="sm:hidden" />
-            </ScrollArea>
-            <ScrollArea className="w-64 sm:w-auto">
-              <div className="flex sm:flex-col p-2">
-                {Array.from({ length: 12 }, (_, i) => i * 5).map((minute) => (
-                  <Button
-                    key={minute}
-                    size="icon"
-                    variant={
-                      value && value.getMinutes() === minute
-                        ? 'default'
-                        : 'ghost'
-                    }
-                    className="sm:w-full shrink-0 aspect-square"
-                    onClick={() =>
-                      handleTimeChange('minute', minute.toString())
-                    }
-                  >
-                    {minute}
-                  </Button>
-                ))}
-              </div>
-              <ScrollBar orientation="horizontal" className="sm:hidden" />
-            </ScrollArea>
-            <ScrollArea className="">
-              <div className="flex sm:flex-col p-2">
-                {['AM', 'PM'].map((ampm) => (
-                  <Button
-                    key={ampm}
-                    size="icon"
-                    variant={
-                      value &&
-                      ((ampm === 'AM' && value.getHours() < 12) ||
-                        (ampm === 'PM' && value.getHours() >= 12))
-                        ? 'default'
-                        : 'ghost'
-                    }
-                    className="sm:w-full shrink-0 aspect-square"
-                    onClick={() => handleTimeChange('ampm', ampm)}
-                  >
-                    {ampm}
-                  </Button>
-                ))}
-              </div>
-            </ScrollArea>
-          </div>
-        </div>
-      </PopoverContent>
-    </Popover>
+        </PopoverContent>
+      </Popover>
+      <Input
+        type="time"
+        className="w-32 appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+        value={
+          value
+            ? `${String(value.getHours()).padStart(2, '0')}:${String(value.getMinutes()).padStart(2, '0')}`
+            : ''
+        }
+        onChange={(e) => {
+          const [hours, minutes] = e.target.value.split(':').map(Number);
+          const current = value ?? new Date();
+          const combined = new Date(current);
+          combined.setHours(hours, minutes, 0, 0);
+          onChange(combined);
+        }}
+      />
+    </div>
   );
 }

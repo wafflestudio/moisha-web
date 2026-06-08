@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import UserAvatar from '@/components/UserAvatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,13 +27,15 @@ export default function ProfileButton({
   };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <button>
-          <Avatar className="border-2">
-            <AvatarImage src={user.profileImage} />
-            <AvatarFallback>CN</AvatarFallback>
-          </Avatar>
+        <button className="cursor-pointer">
+          <UserAvatar
+            name={user.name}
+            imageUrl={user.profileImage}
+            className="w-8 h-8 sm:w-10 sm:h-10 border-2"
+            fallbackClassName="font-semibold text-md sm:text-lg"
+          />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-40" align="end">
@@ -45,7 +47,9 @@ export default function ProfileButton({
           <DropdownMenuItem onClick={goToProfileEdit}>
             프로필 수정
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleLogout}>로그아웃</DropdownMenuItem>
+          <DropdownMenuItem onClick={handleLogout}>
+            <span className="text-destructive">로그아웃</span>
+          </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>

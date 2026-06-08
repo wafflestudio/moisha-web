@@ -8,15 +8,20 @@ import { eventDB } from '../db/event.db';
 import { path } from '../utils';
 
 export const eventHandlers = [
-  // 1. 내가 생성한/참여한 일정 목록 조회 (GET /events/me)
+  // 1. 내가 생성한/참여한 모임 목록 조회 (GET /events/me)
   // :id 보다 먼저 정의되어야 'me'를 id로 인식하지 않음
-  http.get(path('/events/me'), async () => {
+  http.get(path('/events/me'), async ({ request }) => {
+    const url = new URL(request.url);
+    const cursor = url.searchParams.get('cursor');
+    const size = 5;
+
     await delay(300);
 
     // eventDB에서 내가 참여한(viewer.status가 NONE이 아닌) 이벤트만 필터링하거나
     // 간단히 모든 이벤트를 내 이벤트로 간주하여 반환 (데모 목적)
     const myEvents = eventDB
       // 실제로는 user token을 확인해서 필터링해야 하지만, 여기서는 예시로 일부만 반환하거나 전체 반환
+      .filter((e) => e.viewer.status === 'HOST' || e.viewer.status === 'NONE')
       .map((e) => ({
         publicId: e.event.publicId,
         title: e.event.title,
@@ -25,17 +30,31 @@ export const eventHandlers = [
         registrationStartsAt: e.event.registrationStartsAt,
         registrationEndsAt: e.event.registrationEndsAt,
         capacity: e.event.capacity,
-        totalApplicants: e.event.totalApplicants,
+        confirmedCount: e.event.confirmedCount,
+        waitlistCount: e.event.waitlistCount,
       }));
 
+    // Cursor pagination logic mock
+    let startIndex = 0;
+    if (cursor) {
+      const idx = myEvents.findIndex((e) => e.startsAt === cursor);
+      if (idx !== -1) startIndex = idx + 1; // start from next item
+    }
+
+    const paginatedEvents = myEvents.slice(startIndex, startIndex + size);
+    const hasNext = startIndex + size < myEvents.length;
+    const nextCursor = hasNext
+      ? paginatedEvents[paginatedEvents.length - 1].startsAt
+      : null;
+
     return HttpResponse.json({
-      events: myEvents,
-      nextCursor: null,
-      hasNext: false,
+      events: paginatedEvents,
+      nextCursor,
+      hasNext,
     });
   }),
 
-  // 2. 일정 상세 정보 조회 (GET /events/:id)
+  // 2. 모임 상세 정보 조회 (GET /events/:id)
   http.get(path('/events/:id'), async ({ params }) => {
     const { id } = params;
     await delay(300);
@@ -60,7 +79,7 @@ export const eventHandlers = [
         name: `참여자 ${i + 1}`,
         email: i < 8 ? `user${i}@example.com` : null,
         status: i < 8 ? 'CONFIRMED' : 'WAITLISTED',
-        profileImage: 'https://github.com/shadcn.png',
+        profileImage: i != 1 ? 'https://github.com/shadcn.png' : undefined,
         createdAt: new Date().toISOString(),
         waitingNum: i >= 8 ? i - 7 : null,
       })),
@@ -83,7 +102,13 @@ export const eventHandlers = [
     });
   }),
 
-  // 5. 일정 생성 (POST /events)
+  // 신청 취소 (DELETE /registrations/:id)
+  http.delete(path('/registrations/:id'), async () => {
+    await delay(200);
+    return new HttpResponse(null, { status: 200 });
+  }),
+
+  // 5. 모임 생성 (POST /events)
   http.post(path('/events'), async ({ request }) => {
     const body = (await request.json()) as CreateEventRequest;
     await delay(500);
@@ -94,7 +119,8 @@ export const eventHandlers = [
         publicId: newId,
         title: body.title,
         description: body.description || '',
-        totalApplicants: 0,
+        confirmedCount: 0,
+        waitlistCount: 0,
         location: body.location || '',
         startsAt: body.startsAt,
         endsAt: body.endsAt,

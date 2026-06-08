@@ -1,9 +1,9 @@
-name: deploy-client
+name: deploy-dev
 
 on:
   push:
     branches:
-      - main
+      - dev
   workflow_dispatch:
 
 jobs:
@@ -20,9 +20,9 @@ jobs:
 
       - name: Build & Export
         env:
-          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
-          VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
-          VITE_REDIRECT_URI: ${{ secrets.VITE_REDIRECT_URI }}
+          VITE_API_BASE_URL: ${{ secrets.DEV_API_BASE_URL }}
+          VITE_GOOGLE_CLIENT_ID: ${{ secrets.DEV_GOOGLE_CLIENT_ID }}
+          VITE_REDIRECT_URI: ${{ secrets.DEV_REDIRECT_URI }}
         run: |
           yarn install
           yarn build
@@ -33,5 +33,5 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ap-northeast-2
         run: |
-          aws s3 sync ./dist s3://waffle-team4-web-dev --delete
-          aws cloudfront create-invalidation --distribution-id E2ZFV2EEJPTCSU --paths "/*"
+          aws s3 sync ./dist s3://waffle-team4-web-temp --delete
+          aws cloudfront create-invalidation --distribution-id E2HDLBJVBNM8HH --paths "/*"

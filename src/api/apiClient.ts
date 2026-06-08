@@ -9,18 +9,28 @@ interface ApiErrorResponse {
   message: string;
 }
 
-// 5분 버퍼 (밀리초)
-const BUFFER_TIME = 5 * 60 * 1000;
+const TIMEOUT = 10 * 1000; // 10sec
+const BUFFER_TIME = 5 * 60 * 1000; // 5min
 
 // 공통 설정을 가진 axios 인스턴스 생성
 const apiClient = axios.create({
-  baseURL: `${import.meta.env.VITE_API_BASE_URL}/api`,
-  timeout: 5000,
+  // Use proxy in dev mode
+  baseURL: import.meta.env.DEV
+    ? '/api'
+    : `${import.meta.env.VITE_API_BASE_URL}/api`,
+  timeout: TIMEOUT,
   headers: { 'Content-Type': 'application/json' },
 });
 
+// 토큰 만료 시 동시 다발적 API 요청을 막기 위한 플래그
+let isTokenExpiredLocal = false;
+
 // 요청 인터셉터: 모든 요청 직전에 실행됨
 apiClient.interceptors.request.use((config) => {
+  if (isTokenExpiredLocal) {
+    return Promise.reject(new Error('TOKEN_EXPIRED_LOCAL'));
+  }
+
   const { token, logout } = useAuthStore.getState();
 
   if (token) {
@@ -33,10 +43,14 @@ apiClient.interceptors.request.use((config) => {
 
         // 만료시간 5분 전(혹은 이미 지남)이면 거부
         if (expTimeMs - BUFFER_TIME - now <= 0) {
+          isTokenExpiredLocal = true;
+          // 1초 후 플래그 해제 (일시적 차단)
+          setTimeout(() => {
+            isTokenExpiredLocal = false;
+          }, 1000);
+
           // 상태 관리 로그아웃 처리만 수행
-          // 에러 모달(showError)과 리다이렉트(window.location.href)는
-          // 최상단 App.tsx에 마운트된 useAutoLogout 훅에서 일괄적으로 처리하도록 위임함.
-          // 여기서 중복 호출 시 모달이 2번 뜨는 Race Condition 발생 가능성 차단
+          // 에러 모달(showError)과 리다이렉트(window.location.href)는 응답 인터셉터에서 일괄 처리
           logout();
           return Promise.reject(new Error('TOKEN_EXPIRED_LOCAL'));
         }
@@ -59,21 +73,46 @@ apiClient.interceptors.response.use(
   (error: AxiosError<ApiErrorResponse>) => {
     const showError = useErrorStore.getState().showError;
 
+    // 1. 로컬에서 발생시킨 토큰 만료 에러인 경우 useAutoLogout과 동일한 모달을 띄우고 reject
+    if (
+      error.message === 'TOKEN_EXPIRED_LOCAL' ||
+      error.message === 'INVALID_TOKEN_FORMAT'
+    ) {
+      showError(
+        '로그인 유지 시간이 만료되어 자동으로 로그아웃되었습니다.',
+        '로그아웃 안내',
+        () => {
+          window.location.href = '/login';
+        },
+        '다시 로그인하기',
+        '취소'
+      );
+      return Promise.reject(error);
+    }
+
     if (error.response?.data) {
       const { title, message, code } = error.response.data;
 
-      // 1. 토큰 만료 등 특수한 경우 확인 버튼 액션 정의
+      // 2. 토큰 만료 등 특수한 경우 확인 버튼 액션 정의
       let onConfirm = undefined;
       let confirmText = undefined;
+      let cancelText = undefined;
       if (code === 'TOKEN_EXPIRED') {
         onConfirm = () => {
           window.location.href = '/login';
         };
         confirmText = '다시 로그인하기';
+        cancelText = '취소';
       }
 
-      // 2. 스토어를 통해 모달 띄우기 (순서 주의: message, title, onConfirm, confirmText)
-      showError(message, title || '오류 발생', onConfirm, confirmText);
+      // 3. 스토어를 통해 모달 띄우기 (순서 주의: message, title, onConfirm, confirmText, cancelText, onCancel)
+      showError(
+        message,
+        title || '오류 발생',
+        onConfirm,
+        confirmText,
+        cancelText
+      );
     } else {
       // 서버 응답 자체가 없는 경우 (네트워크 오류 등)
       showError(

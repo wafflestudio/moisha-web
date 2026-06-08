@@ -1,14 +1,14 @@
-import LoginLayout from '@/layouts/LoginLayout';
+import PrivateRoute from '@/components/auth/PrivateRoute';
+import PublicOnlyRoute from '@/components/auth/PublicOnlyRoute';
 import RootLayout from '@/layouts/RootLayout';
-
 import EventEdit from '@/routes/EventEdit';
 import EventMain from '@/routes/EventMain';
 import EventRegister from '@/routes/EventRegister';
 import Guests from '@/routes/Guests';
 import Home from '@/routes/Home';
 import Login from '@/routes/Login';
-import LoginEmail from '@/routes/LoginEmail';
 import NewEvent from '@/routes/NewEvent';
+import NotFound from '@/routes/NotFound';
 import ProfileEdit from '@/routes/ProfileEdit';
 import SignUp from '@/routes/SignUp';
 import SocialCallback from '@/routes/SocialCallback';
@@ -23,41 +23,57 @@ export const router = createBrowserRouter([
     children: [
       { index: true, Component: Home },
       {
-        path: 'login',
-        Component: LoginLayout,
+        Component: PublicOnlyRoute,
         children: [
-          { index: true, Component: Login },
-          { path: 'email', Component: LoginEmail },
+          {
+            path: 'login',
+            Component: Login,
+            handle: { title: '로그인 - 모이밍' },
+          },
+          {
+            path: 'sign-up',
+            Component: SignUp,
+            handle: { title: '회원가입 - 모이밍' },
+          },
+          {
+            path: 'auth/verify',
+            Component: VerifyEmail,
+            handle: { title: '이메일 인증 - 모이밍' },
+          },
+          {
+            path: 'auth/callback/:provider',
+            Component: SocialCallback,
+            handle: { title: '소셜 로그인 - 모이밍' },
+          },
         ],
-        handle: { title: '로그인 - 모이밍' },
       },
       {
-        path: 'sign-up',
-        children: [{ path: 'email', Component: SignUp }],
-        handle: { title: '회원가입 - 모이밍' },
+        Component: PrivateRoute,
+        children: [
+          {
+            path: 'profile',
+            Component: ProfileEdit,
+            handle: { title: '프로필 수정 - 모이밍' },
+          },
+        ],
       },
       {
-        path: 'auth/verify',
-        Component: VerifyEmail,
-        handle: { title: '이메일 인증 - 모이밍' },
-      },
-      {
-        path: 'auth/callback/:provider',
-        Component: SocialCallback,
-        handle: { title: '소셜 로그인 - 모이밍' },
-      },
-      {
-        path: 'profile',
-        Component: ProfileEdit,
-        handle: { title: '프로필 수정 - 모이밍' },
+        path: '*',
+        Component: NotFound,
+        handle: { title: '모이밍' },
       },
     ],
   },
   {
     path: '/new-event',
     Component: RootLayout,
-    children: [{ index: true, Component: NewEvent }],
-    handle: { title: '일정 만들기 - 모이밍' },
+    children: [
+      {
+        Component: PrivateRoute,
+        children: [{ index: true, Component: NewEvent }],
+      },
+    ],
+    handle: { title: '모임 만들기 - 모이밍' },
   },
   {
     path: '/event/:id',
@@ -66,8 +82,11 @@ export const router = createBrowserRouter([
       { index: true, Component: EventMain },
       { path: 'guests', Component: Guests },
       { path: 'register', Component: EventRegister },
-      { path: 'edit', Component: EventEdit },
+      {
+        Component: PrivateRoute,
+        children: [{ path: 'edit', Component: EventEdit }],
+      },
     ],
-    handle: { title: '일정 상세 - 모이밍' },
+    handle: { title: '모임 상세 - 모이밍' },
   },
 ]);

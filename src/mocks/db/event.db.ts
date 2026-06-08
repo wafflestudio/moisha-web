@@ -4,13 +4,114 @@ interface MockEvent extends EventDetailResponse {
   // 필요한 경우 추가 필드 정의
 }
 
+const generatedHostedEvents = Array.from({ length: 20 }).map((_, i) => {
+  const start = new Date('2026-03-01T10:00:00.000Z');
+  start.setDate(start.getDate() + i + 1);
+  const end = new Date(start);
+  end.setHours(end.getHours() + 2);
+
+  const regStart = new Date(start);
+  regStart.setDate(start.getDate() - 7);
+
+  const newId = `generated-event-${i}`;
+
+  return {
+    event: {
+      publicId: newId,
+      title: `무한 스크롤 테스트 생성 모임 ${i + 1}`,
+      description: '테스트용',
+      confirmedCount: Math.floor(i / 2),
+      waitlistCount: i % 3,
+      location: '테스트장소',
+      startsAt: start.toISOString(),
+      endsAt: end.toISOString(),
+      registrationStartsAt: regStart.toISOString(),
+      registrationEndsAt: start.toISOString(),
+      capacity: 10 + i,
+    },
+    creator: {
+      name: '나 (Host)',
+      email: 'me@example.com',
+    },
+    viewer: {
+      status: 'HOST' as const,
+      name: '나 (Host)',
+      waitlistPosition: 0,
+      registrationPublicId: `reg-${newId}`,
+      reservationEmail: 'me@example.com',
+    },
+    capabilities: {
+      shareLink: true,
+      apply: false,
+      wait: false,
+      cancel: false,
+    },
+    guestsPreview: [],
+  };
+});
+
+const generatedJoinedEvents = Array.from({ length: 15 }).map((_, i) => {
+  const isPast = i % 3 === 0;
+  const now = new Date();
+
+  const startAt = new Date(now);
+  startAt.setDate(now.getDate() + (isPast ? -5 : 5 + i));
+  const endAt = new Date(startAt);
+  endAt.setHours(startAt.getHours() + 2);
+
+  const regStart = new Date(startAt);
+  regStart.setDate(startAt.getDate() - 14);
+  const regEnd = new Date(startAt);
+  regEnd.setDate(startAt.getDate() - 2);
+
+  const newId = `reg-mock-${i}`;
+  const status = (
+    i % 4 === 0 ? 'WAITLISTED' : i % 5 === 0 ? 'CANCELED' : 'CONFIRMED'
+  ) as 'CONFIRMED' | 'WAITLISTED' | 'CANCELED';
+
+  return {
+    event: {
+      publicId: newId,
+      title: `참여 테스트 모임 ${i + 1}`,
+      description: '테스트용',
+      confirmedCount: Math.floor(Math.random() * (20 + i)),
+      waitlistCount: i % 4,
+      location: '테스트장소',
+      startsAt: startAt.toISOString(),
+      endsAt: endAt.toISOString(),
+      registrationStartsAt: regStart.toISOString(),
+      registrationEndsAt: regEnd.toISOString(),
+      capacity: 20 + i,
+    },
+    creator: {
+      name: '주최자',
+      email: 'host@example.com',
+    },
+    viewer: {
+      status: status,
+      name: '나',
+      waitlistPosition: i % 4 === 0 ? Math.floor(Math.random() * 5) + 1 : 0,
+      registrationPublicId: `reg-${newId}`,
+      reservationEmail: 'me@example.com',
+    },
+    capabilities: {
+      shareLink: true,
+      apply: false,
+      wait: false,
+      cancel: true,
+    },
+    guestsPreview: [],
+  };
+});
+
 export const eventDB: MockEvent[] = [
   {
     event: {
       publicId: 'event-1',
       title: '모이샤 정기모임',
       description: '2월 2일 모이샤 정기모임을 가집니다!',
-      totalApplicants: 15,
+      confirmedCount: 15,
+      waitlistCount: 2,
       location: '서울대 잔디광장',
       startsAt: '2026-02-15T14:00:00Z',
       endsAt: '2026-02-15T15:00:00Z',
@@ -65,7 +166,8 @@ export const eventDB: MockEvent[] = [
       publicId: 'my-event-1',
       title: '내가 만든 테니스 모임',
       description: '테니스 치실 분 구합니다.',
-      totalApplicants: 5,
+      confirmedCount: 5,
+      waitlistCount: 1,
       location: '테니스장',
       startsAt: '2026-02-10T10:00:00.000Z',
       endsAt: '2026-02-10T12:00:00.000Z',
@@ -98,7 +200,8 @@ export const eventDB: MockEvent[] = [
       publicId: 'my-event-2',
       title: '참여 중인 자바스크립트 스터디',
       description: '자바스크립트 스터디입니다.',
-      totalApplicants: 4,
+      confirmedCount: 4,
+      waitlistCount: 1,
       location: '강남역',
       startsAt: '2026-02-15T19:00:00.000Z',
       endsAt: '2026-02-15T21:00:00.000Z',
@@ -131,7 +234,8 @@ export const eventDB: MockEvent[] = [
       publicId: 'my-event-3',
       title: '주말 러닝 크루 모집',
       description: '함께 달려요!',
-      totalApplicants: 12,
+      confirmedCount: 12,
+      waitlistCount: 5,
       location: '한강공원',
       startsAt: '2026-02-22T08:00:00.000Z',
       endsAt: '2026-02-22T10:00:00.000Z',
@@ -157,6 +261,30 @@ export const eventDB: MockEvent[] = [
       wait: true,
       cancel: true,
     },
-    guestsPreview: [],
+    guestsPreview: [
+      {
+        id: 1,
+        name: '김철수',
+        profileImage: 'https://github.com/shadcn.png',
+      },
+      { id: 2, name: '안영희', profileImage: '' },
+      {
+        id: 3,
+        name: '홍길동',
+        profileImage: 'https://github.com/shadcn.png',
+      },
+      {
+        id: 4,
+        name: '홍길동',
+        profileImage: 'https://github.com/shadcn.png',
+      },
+      {
+        id: 5,
+        name: '홍길동',
+        profileImage: 'https://github.com/shadcn.png',
+      },
+    ],
   },
+  ...generatedHostedEvents,
+  ...generatedJoinedEvents,
 ];

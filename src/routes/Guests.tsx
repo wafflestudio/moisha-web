@@ -6,6 +6,8 @@ import { useNavigate, useParams } from 'react-router';
 import { toast } from 'sonner';
 import useInfiniteGuests from '../hooks/useInfiniteGuests';
 
+import Subheader from '@/components/Subheader';
+import UserAvatar from '@/components/UserAvatar';
 // shadcn UI 컴포넌트
 import {
   AlertDialog,
@@ -18,10 +20,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import type { GuestStatus } from '@/types/schemas';
-import { ChevronLeftIcon, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 export default function Guests() {
   const { id } = useParams<{ id: string }>();
@@ -75,23 +76,12 @@ export default function Guests() {
   }
 
   return (
-    <div className="min-h-screen relative">
+    <div className="flex flex-col">
       {/* 1. 상단 네비게이션 */}
-      <header className="w-full flex justify-center">
-        <div className="max-w-2xl min-w-[320px] w-[90%] flex items-center justify-between px-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate(-1)}
-            className="rounded-full"
-          >
-            <ChevronLeftIcon className="w-6 h-6" />
-          </Button>
-          <h1 className="text-2xl sm:text-2xl flex-1 ml-4 truncate text-black">
-            참여자 명단({totalCount}명)
-          </h1>
-        </div>
-      </header>
+      <Subheader
+        title={`참여자 명단(${totalCount}명)`}
+        onBackClick={() => navigate(-1)}
+      />
 
       {/* 2. 메인 콘텐츠 */}
       <div className="max-w-2xl min-w-[320px] mx-auto w-[90%] flex flex-col gap-10 mt-2">
@@ -118,24 +108,22 @@ export default function Guests() {
           page.participants.map((guest) => (
             <div
               key={guest.registrationId}
-              className="flex items-center justify-between w-full"
+              className="flex items-center justify-between w-full gap-2 sm:gap-4"
             >
-              <div className="flex items-center gap-4">
-                <Avatar className="w-16 h-16 border-none shadow-sm">
-                  <AvatarImage src={guest.profileImage || undefined} />
-                  <AvatarFallback className="bg-black text-white text-xs">
-                    {guest.name?.slice(0, 2)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col">
-                  <span className="text-xl font-bold text-black">
+              <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                <UserAvatar name={guest.name} imageUrl={guest.profileImage} />
+
+                <div className="flex flex-col min-w-0 flex-1">
+                  <span className="text-lg sm:text-xl font-bold text-black truncate">
                     {guest.name}
                   </span>
                   {guest.email ? (
-                    <span className="text-gray-400 text-lg">{guest.email}</span>
+                    <span className="text-sm sm:text-lg text-gray-400 truncate">
+                      {guest.email}
+                    </span>
                   ) : null}
                   {guest.status === 'WAITLISTED' && (
-                    <span className="text-blue-400 text-lg font-semibold">
+                    <span className="text-sm sm:text-lg text-blue-400 font-semibold truncate">
                       대기 {guest.waitingNum}번
                     </span>
                   )}
@@ -148,7 +136,7 @@ export default function Guests() {
                   <AlertDialogTrigger asChild>
                     <Button
                       variant="secondary"
-                      className="bg-[#333333] hover:bg-black text-white rounded-lg px-4 py-6 text-base font-bold"
+                      className="bg-[#333333] hover:bg-black text-white rounded-lg px-3 py-2 sm:px-4 sm:py-3 h-auto text-sm sm:text-base font-bold shrink-0"
                     >
                       강제취소
                     </Button>
@@ -170,7 +158,6 @@ export default function Guests() {
                         onClick={() =>
                           handleCancelGuest(guest.name, guest.registrationId)
                         }
-                        className="bg-primary text-white hover:bg-primary/90 rounded-xl"
                       >
                         취소하기
                       </AlertDialogAction>
@@ -191,7 +178,11 @@ export default function Guests() {
               목록을 더 불러오고 있습니다...
             </p>
           ) : (
-            <p className="text-gray-400 text-sm">마지막 참여자입니다.</p>
+            <p className="text-gray-400 text-sm">
+              {activeTab === 'WAITLISTED'
+                ? '마지막 대기자입니다.'
+                : '마지막 참여자입니다.'}
+            </p>
           )}
         </div>
       </div>

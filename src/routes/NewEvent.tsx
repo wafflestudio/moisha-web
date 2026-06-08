@@ -2,6 +2,7 @@ import { EventForm } from '@/components/EventForm';
 import type { FormValues } from '@/components/EventForm';
 import useAuthStore from '@/hooks/useAuthStore';
 import useEvent from '@/hooks/useEvent';
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 
@@ -10,24 +11,22 @@ export default function NewEvent() {
   const user = useAuthStore((state) => state.user);
   const { createEvent, loading } = useEvent();
 
-  const now = new Date();
-  const initialRegiEndDate = new Date(now.getTime() + 72 * 60 * 60 * 1000); // 3 days later
-  const initialEventStartDate = new Date(
-    initialRegiEndDate.getTime() + 24 * 60 * 60 * 1000
-  );
-
-  const defaultValues: FormValues = {
-    title: '',
-    capacity: 4,
-    isFromNow: true,
-    isBounded: false,
-    regiStartDate: now,
-    regiEndDate: initialRegiEndDate,
-    eventStartDate: initialEventStartDate,
-    eventEndDate: undefined,
-    location: '',
-    description: '',
-  };
+  const defaultValues = useMemo<FormValues>(() => {
+    const now = new Date();
+    const regiEndDate = new Date(now.getTime() + 72 * 60 * 60 * 1000); // 3 days later
+    return {
+      title: '',
+      capacity: 4,
+      isFromNow: true,
+      isBounded: false,
+      regiStartDate: now,
+      regiEndDate,
+      eventStartDate: new Date(regiEndDate.getTime() + 24 * 60 * 60 * 1000),
+      eventEndDate: undefined,
+      location: '',
+      description: '',
+    };
+  }, []);
 
   const onSubmit = async (data: FormValues) => {
     if (!user) {
@@ -47,29 +46,31 @@ export default function NewEvent() {
       capacity: data.capacity,
       waitlistEnabled: true,
       registrationStartsAt: data.isFromNow
-        ? new Date().toISOString()
+        ? undefined
         : data.regiStartDate.toISOString(),
       registrationEndsAt: data.regiEndDate.toISOString(),
     };
 
-    const eventId = await createEvent(payload);
-
-    if (eventId) {
-      toast.success('일정이 성공적으로 생성되었습니다!');
-      navigate(`/event/${eventId}`);
+    try {
+      const { publicId } = await createEvent(payload);
+      toast.success('모임이 성공적으로 생성되었습니다!');
+      navigate(`/event/${publicId}`);
+    } catch (error: unknown) {
+      console.error('Failed to create event:', error);
     }
   };
 
   return (
     <EventForm
-      pageTitle="일정 만들기"
+      pageTitle="모임 만들기"
       defaultValues={defaultValues}
       onSubmit={onSubmit}
       loading={loading}
       onBack={() => navigate(-1)}
-      submitButtonText="만들기"
-      saveDialogTitle="일정을 생성하시겠습니까?"
-      saveDialogDescription="참여자가 생기는 경우, 모임 정보가 변경되면 혼선이 있을 수 있습니다."
+      submitButtonText="저장"
+      saveDialogTitle="모임을 저장하시겠습니까?"
+      saveDialogDescription="모임을 저장한 이후에도 수정 및 삭제가 가능합니다."
+      mode="create"
     />
   );
 }
