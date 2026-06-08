@@ -98,8 +98,8 @@ export default function EventEdit() {
     try {
       const payload = {
         title: formData.title.trim(),
-        location: formData.location?.trim() || undefined,
-        description: formData.description?.trim() || undefined,
+        location: formData.location?.trim() || '',
+        description: formData.description?.trim() || '',
         startsAt: formData.eventStartDate.toISOString(),
         endsAt:
           formData.isBounded && formData.eventEndDate

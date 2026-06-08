@@ -1,5 +1,5 @@
+import { DateTimePicker } from '@/components/DateTimePicker';
 import { InputWithPlusMinusButtons } from '@/components/InputWithPlusMinusButtton';
-import SimpleDateTimePicker from '@/components/SimpleDateTimePicker';
 import Subheader from '@/components/Subheader';
 import {
   AlertDialog,
@@ -232,7 +232,8 @@ export function EventForm({
     // 1단계 필드만 검증
     const isValidStep1 = await trigger([
       'title',
-      'capacity',
+      'location',
+      'description',
       'eventStartDate',
       'eventEndDate',
     ]);
@@ -241,7 +242,8 @@ export function EventForm({
       // 추가적으로 zod superRefine의 에러도 확인해야 함
       const step1Errors = [
         errors.title,
-        errors.capacity,
+        errors.location,
+        errors.description,
         errors.eventStartDate,
         errors.eventEndDate,
       ];
@@ -368,14 +370,15 @@ export function EventForm({
 
                   {/* Event Start */}
                   <Field className="gap-1.5">
-                    <FieldLabel htmlFor="eventStartDate">
-                      모임 시작일시
+                    <FieldLabel className="gap-0.5">
+                      <span>모임 시작일시</span>
+                      <span className="text-destructive">*</span>
                     </FieldLabel>
                     <Controller
                       control={control}
                       name="eventStartDate"
                       render={({ field }) => (
-                        <SimpleDateTimePicker
+                        <DateTimePicker
                           value={field.value}
                           onChange={field.onChange}
                           placeholder="언제 모이나요?"
@@ -417,7 +420,7 @@ export function EventForm({
                           control={control}
                           name="eventEndDate"
                           render={({ field }) => (
-                            <SimpleDateTimePicker
+                            <DateTimePicker
                               value={field.value}
                               onChange={field.onChange}
                               placeholder="언제 헤어지나요?"
@@ -444,10 +447,20 @@ export function EventForm({
                           {...field}
                           id="location"
                           placeholder="어디서 모이나요? (최대 20자)"
+                          className={`${
+                            errors.location
+                              ? 'border-destructive focus:ring-destructive/10'
+                              : ''
+                          }`}
                           value={field.value ?? ''}
                         />
                       )}
                     />
+                    {errors.location && (
+                      <p className={errorTextStyle}>
+                        {errors.location.message}
+                      </p>
+                    )}
                   </Field>
 
                   {/* Description */}
@@ -461,11 +474,20 @@ export function EventForm({
                           {...field}
                           id="description"
                           placeholder="이번 모임은 어떤 모임인가요? 모임을 설명해 주세요."
-                          className="h-20 body-base"
+                          className={`h-20 body-base ${
+                            errors.description
+                              ? 'border-destructive focus:ring-destructive/10'
+                              : ''
+                          }`}
                           value={field.value ?? ''}
                         />
                       )}
                     />
+                    {errors.description && (
+                      <p className={errorTextStyle}>
+                        {errors.description.message}
+                      </p>
+                    )}
                   </Field>
                 </FieldGroup>
               </FieldSet>
@@ -525,11 +547,10 @@ export function EventForm({
                         control={control}
                         name="regiStartDate"
                         render={({ field }) => (
-                          <SimpleDateTimePicker
+                          <DateTimePicker
                             value={field.value}
                             onChange={field.onChange}
                             placeholder="언제 시작할까요?"
-                            disabled={isFromNow}
                           />
                         )}
                       />
@@ -551,7 +572,7 @@ export function EventForm({
                       control={control}
                       name="regiEndDate"
                       render={({ field }) => (
-                        <SimpleDateTimePicker
+                        <DateTimePicker
                           value={field.value}
                           onChange={(date) => {
                             field.onChange(date);
