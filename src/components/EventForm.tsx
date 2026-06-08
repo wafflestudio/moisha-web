@@ -1,5 +1,5 @@
+import { DateTimePicker } from '@/components/DateTimePicker';
 import { InputWithPlusMinusButtons } from '@/components/InputWithPlusMinusButtton';
-import SimpleDateTimePicker from '@/components/SimpleDateTimePicker';
 import Subheader from '@/components/Subheader';
 import {
   AlertDialog,
@@ -370,14 +370,15 @@ export function EventForm({
 
                   {/* Event Start */}
                   <Field className="gap-1.5">
-                    <FieldLabel htmlFor="eventStartDate">
-                      모임 시작일시
+                    <FieldLabel className="gap-0.5">
+                      <span>모임 시작일시</span>
+                      <span className="text-destructive">*</span>
                     </FieldLabel>
                     <Controller
                       control={control}
                       name="eventStartDate"
                       render={({ field }) => (
-                        <SimpleDateTimePicker
+                        <DateTimePicker
                           value={field.value}
                           onChange={field.onChange}
                           placeholder="언제 모이나요?"
@@ -419,7 +420,7 @@ export function EventForm({
                           control={control}
                           name="eventEndDate"
                           render={({ field }) => (
-                            <SimpleDateTimePicker
+                            <DateTimePicker
                               value={field.value}
                               onChange={field.onChange}
                               placeholder="언제 헤어지나요?"
@@ -546,11 +547,10 @@ export function EventForm({
                         control={control}
                         name="regiStartDate"
                         render={({ field }) => (
-                          <SimpleDateTimePicker
+                          <DateTimePicker
                             value={field.value}
                             onChange={field.onChange}
                             placeholder="언제 시작할까요?"
-                            disabled={isFromNow}
                           />
                         )}
                       />
@@ -572,7 +572,7 @@ export function EventForm({
                       control={control}
                       name="regiEndDate"
                       render={({ field }) => (
-                        <SimpleDateTimePicker
+                        <DateTimePicker
                           value={field.value}
                           onChange={(date) => {
                             field.onChange(date);
