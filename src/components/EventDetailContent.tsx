@@ -75,7 +75,7 @@ export function EventDetailContent({ view, event }: EventDetailContentProps) {
       </div>
 
       <div className="px-2 pb-6 border-b border-border">
-        <p className="body-base text-[#1E1E1E] whitespace-pre-wrap">
+        <p className="body-base text-[#1E1E1E] whitespace-pre-wrap break-words">
           {event.description}
         </p>
       </div>
