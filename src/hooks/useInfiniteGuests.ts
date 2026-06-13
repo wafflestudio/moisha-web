@@ -1,4 +1,5 @@
 import { getGuests } from '@/api/events/registrations';
+import { queryKeys } from '@/constants/queryKeys';
 import type { GuestsParams, GuestsResponse } from '@/types/events';
 import type { InfiniteData } from '@tanstack/react-query';
 import { useInfiniteQuery } from '@tanstack/react-query';
@@ -16,11 +17,11 @@ export default function useInfiniteGuests({
     GuestsResponse,
     Error,
     InfiniteData<GuestsResponse>,
-    (string | object)[],
+    ReturnType<typeof queryKeys.events.guests.list>,
     number | undefined
   >({
-    // 필터 조건이 바뀔 때마다 새로운 쿼리로 인식하도록 설정
-    queryKey: ['guests', eventId, filters],
+    // 이벤트 단위로 한 번에 invalidate할 수 있게 key 계층을 맞춥니다.
+    queryKey: queryKeys.events.guests.list(eventId, filters),
 
     queryFn: async ({ pageParam }) => {
       const response = await getGuests(eventId, {

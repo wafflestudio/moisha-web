@@ -1,25 +1,72 @@
 import { deleteEvent, getEventDetail } from '@/api/events/event';
-import { getGuests, joinEvent } from '@/api/events/registrations';
+import { joinEvent } from '@/api/events/registrations';
 import {
   deleteRegistration,
   getRegistrationDetail,
   patchRegistration,
 } from '@/api/registrations/registration';
+import { queryKeys } from '@/constants/queryKeys';
 import useAuthStore from '@/hooks/useAuthStore';
+import useInvalidateEventRegistration from '@/hooks/useInvalidateEventRegistration';
 import type { EventDetailResponse, JoinEventRequest } from '@/types/events';
-import type { Guest } from '@/types/schemas';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
-import { useCallback, useState } from 'react';
+import { useEffect } from 'react';
 import { useSearchParams } from 'react-router';
 
-export default function useEventDetail(id?: string) {
-  const [loading, setLoading] = useState<boolean>(false);
-  const [isDeleted, setIsDeleted] = useState<boolean>(false);
-  const [data, setData] = useState<EventDetailResponse | null>(null);
-  const [searchParams] = useSearchParams();
-  const [guests, setGuests] = useState<Guest[]>([]);
+interface JoinEventVariables {
+  eventId: string;
+  data: JoinEventRequest;
+}
 
-  // 1. 유저 식별용 ID 확보 (URL 파라미터 우선, 없으면 Zustand 스토어)
+const getMergedEventDetail = async (
+  eventId: string,
+  effectiveRegId?: string | null
+): Promise<EventDetailResponse> => {
+  const eventRes = await getEventDetail(eventId);
+  let mergedData = eventRes.data;
+
+  if (mergedData.viewer.status !== 'NONE' || !effectiveRegId) {
+    return mergedData;
+  }
+
+  try {
+    const regRes = await getRegistrationDetail(effectiveRegId);
+    const canCancel =
+      regRes.status === 'CONFIRMED' || regRes.status === 'WAITLISTED';
+
+    // 비로그인 신청자는 이벤트 상세 응답만으로 본인 상태를 알 수 없어서
+    // 저장해 둔 regId로 신청 상세를 병합해 같은 화면 상태를 구성합니다.
+    mergedData = {
+      ...mergedData,
+      viewer: {
+        ...mergedData.viewer,
+        status: regRes.status,
+        name: regRes.guestName,
+        waitlistPosition: regRes.waitlistPosition,
+        registrationPublicId: regRes.registrationPublicId,
+        reservationEmail: regRes.reservationEmail,
+      },
+      capabilities: {
+        ...mergedData.capabilities,
+        apply: regRes.status === 'CANCELED',
+        wait: false,
+        cancel: canCancel,
+      },
+    };
+  } catch (regError) {
+    // regId가 만료되었거나 잘못된 경우에는 공개 상세만 보여줘야 합니다.
+    console.error('Failed to fetch guest registration info:', regError);
+  }
+
+  return mergedData;
+};
+
+export default function useEventDetail(id?: string) {
+  const [searchParams] = useSearchParams();
+  const queryClient = useQueryClient();
+  const invalidateEventRegistration = useInvalidateEventRegistration();
+
   const urlRegId = searchParams.get('regId');
   const guestRegId = useAuthStore((state) =>
     id ? state.guestRegistrations[id] : null
@@ -29,165 +76,156 @@ export default function useEventDetail(id?: string) {
   const setGuestRegistration = useAuthStore(
     (state) => state.setGuestRegistration
   );
-  const removeGuestRegistration = useAuthStore(
-    (state) => state.removeGuestRegistration
-  );
 
-  // 2. 모임 상세 정보 로드 핸들러
-  const handleFetchDetail = useCallback(
-    async (eventId: string) => {
-      setLoading(true);
-      setIsDeleted(false);
-      try {
-        // (1) 기본 모임 정보 가져오기
-        const eventRes = await getEventDetail(eventId);
-        let mergedData = eventRes.data;
+  // 1. 이벤트 상세는 regId에 따라 viewer 상태가 달라질 수 있어 key에 함께 포함합니다.
+  const eventDetailQuery = useQuery<EventDetailResponse, Error>({
+    queryKey: id
+      ? queryKeys.events.detail(id, effectiveRegId)
+      : queryKeys.events.detail('__missing_event__'),
+    queryFn: () => {
+      if (!id) {
+        throw new Error('EVENT_ID_REQUIRED');
+      }
+      return getMergedEventDetail(id, effectiveRegId);
+    },
+    enabled: Boolean(id),
+    retry: (failureCount, error) => {
+      if (isAxiosError(error) && error.response?.status === 404) return false;
+      if (isAxiosError(error) && error.response?.status === 401) return false;
+      if (
+        error.message === 'TOKEN_EXPIRED_LOCAL' ||
+        error.message === 'INVALID_TOKEN_FORMAT'
+      ) {
+        return false;
+      }
+      return failureCount < 3;
+    },
+  });
 
-        // (2) 모임 이름을 페이지 제목으로 설정
-        if (mergedData.event.title) {
-          document.title = `${mergedData.event.title} - 모이밍`;
-        } else {
-          document.title = '모임 상세 - 모이밍';
-        }
+  useEffect(() => {
+    const title = eventDetailQuery.data?.event.title;
+    document.title = title ? `${title} - 모이밍` : '모임 상세 - 모이밍';
+  }, [eventDetailQuery.data?.event.title]);
 
-        if (mergedData.viewer.status === 'NONE' && effectiveRegId) {
-          // (3) 비로그인 유저(NONE)인데 식별 ID가 있는 경우 유저 정보 추가 로드
-          try {
-            const regRes = await getRegistrationDetail(effectiveRegId);
+  // 2. 신청 성공 후 저장된 regId가 다음 상세 조회의 viewer 병합 기준이 됩니다.
+  const joinMutation = useMutation({
+    mutationFn: ({ eventId, data }: JoinEventVariables) =>
+      joinEvent(eventId, data),
+    onSuccess: async (response, { eventId }) => {
+      const regId = response.data.registrationPublicId;
 
-            // 데이터 병합: 기존 event 정보는 유지하고 viewer와 capabilities를 유저 정보로 갱신
-            mergedData = {
-              ...mergedData,
-              viewer: {
-                ...mergedData.viewer,
-                status: regRes.status,
-                name: regRes.guestName,
-                waitlistPosition: regRes.waitlistPosition,
-                registrationPublicId: regRes.registrationPublicId,
-                reservationEmail: regRes.reservationEmail,
-              },
-              capabilities: {
-                ...mergedData.capabilities,
-                cancel: true, // 내 정보를 조회했다는 것은 취소 권한이 있다는 의미
-                apply: false, // 이미 신청했으므로 신청 버튼은 비활성화
-                wait: false,
-              },
-            };
-          } catch (regError) {
-            // ID가 만료되었거나 잘못된 경우 조용히 기본 정보를 보여줌 (NONE 상태 유지)
-            console.error('Failed to fetch guest registration info:', regError);
-          }
-        }
+      if (regId) {
+        setGuestRegistration(eventId, regId);
+      }
 
-        setData(mergedData);
-        return mergedData.viewer.status;
-      } catch (error: unknown) {
-        if (isAxiosError(error) && error.response?.status === 404) {
-          setIsDeleted(true);
-        } else {
-          console.error('Fetch event detail failed:', error);
-        }
-        return 'ERROR';
-      } finally {
-        setLoading(false);
+      await invalidateEventRegistration(eventId);
+    },
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: (registrationId: string) => deleteRegistration(registrationId),
+    onSuccess: async () => {
+      if (id) {
+        // 비로그인 사용자의 regId는 유지하고, 서버의 CANCELED 상태를 다시 조회합니다.
+        await invalidateEventRegistration(id);
       }
     },
-    [effectiveRegId]
-  );
+  });
 
-  // 3. 참여자 전체 명단 로드 핸들러
-  const handleFetchRegistrations = useCallback(async (eventId: string) => {
-    setLoading(true);
-    try {
-      const data = await getGuests(eventId);
-      setGuests(data.data.participants);
-    } catch (error: unknown) {
-      console.error('Fetch registrations error:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const deleteMutation = useMutation({
+    mutationFn: (eventId: string) => deleteEvent(eventId),
+    onSuccess: async (_response, eventId) => {
+      // 삭제 후 홈 목록과 상세/참여자 캐시가 서로 다른 상태를 보지 않게 함께 무효화합니다.
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.events.detailBase(eventId),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.events.guests.all(eventId),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.legacy.myEvents,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.legacy.myRegistrations,
+        }),
+      ]);
+    },
+  });
 
-  // 4. 참여 신청 로직 핸들러
+  const banMutation = useMutation({
+    mutationFn: (registrationId: string) =>
+      patchRegistration(registrationId, {
+        status: 'BANNED',
+      }),
+    onSuccess: async () => {
+      if (id) {
+        await invalidateEventRegistration(id);
+      }
+    },
+  });
+
   const handleJoinEvent = async (
-    id: string,
+    eventId: string,
     data: JoinEventRequest
   ): Promise<boolean> => {
-    setLoading(true);
     try {
-      const response = await joinEvent(id, data);
-      if (response.status === 200 || response.status === 201) {
-        const regId = response.data.registrationPublicId;
-
-        if (regId) {
-          setGuestRegistration(id, regId);
-        }
-        return true;
-      }
-      return false;
+      await joinMutation.mutateAsync({ eventId, data });
+      return true;
     } catch (error: unknown) {
       console.error('Join event error:', error);
       return false;
-    } finally {
-      setLoading(false);
     }
   };
 
-  // 5. 참여 취소 로직 핸들러
-  const handleCancelEvent = async (registrationId: string) => {
-    setLoading(true);
+  const handleCancelEvent = async (
+    registrationId: string
+  ): Promise<boolean> => {
     try {
-      await deleteRegistration(registrationId);
-      if (id) {
-        removeGuestRegistration(id);
-      }
+      await cancelMutation.mutateAsync(registrationId);
       return true;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Cancel event error:', error);
       return false;
-    } finally {
-      setLoading(false);
     }
   };
 
-  // 6. 모임 삭제 로직 핸들러
-  const handleDeleteEvent = async (eventId: string) => {
-    setLoading(true);
+  const handleDeleteEvent = async (eventId: string): Promise<boolean> => {
     try {
-      await deleteEvent(eventId);
+      await deleteMutation.mutateAsync(eventId);
       return true;
     } catch (error: unknown) {
       console.error('Delete event error:', error);
       return false;
-    } finally {
-      setLoading(false);
     }
   };
 
-  // 7. 참여 강제 취소 로직 핸들러
-  const handleBanEvent = async (registrationId: string) => {
-    setLoading(true);
+  const handleBanEvent = async (registrationId: string): Promise<boolean> => {
     try {
-      await patchRegistration(registrationId, {
-        status: 'BANNED',
-      });
-      if (id) await handleFetchDetail(id);
+      await banMutation.mutateAsync(registrationId);
       return true;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Ban event error:', error);
       return false;
-    } finally {
-      setLoading(false);
     }
   };
 
+  const isDeleted =
+    isAxiosError(eventDetailQuery.error) &&
+    eventDetailQuery.error.response?.status === 404;
+  const hasFetchError = eventDetailQuery.isError && !isDeleted;
+
   return {
-    loading,
-    data,
+    loading:
+      eventDetailQuery.isLoading ||
+      joinMutation.isPending ||
+      cancelMutation.isPending ||
+      deleteMutation.isPending ||
+      banMutation.isPending,
+    data: eventDetailQuery.data ?? null,
     isDeleted,
-    guests,
-    handleFetchDetail,
-    handleFetchRegistrations,
+    hasFetchError,
+    isBanning: banMutation.isPending,
     handleJoinEvent,
     handleCancelEvent,
     handleDeleteEvent,
