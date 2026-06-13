@@ -114,7 +114,7 @@ export default function Home() {
       </div>
 
       {/* 탭 UI 영역 */}
-      <div className="border-b-1 border-border sticky top-16 bg-white z-10 flex pt-2 -mx-4 px-4">
+      <div className="border-b border-border sticky top-16 bg-white z-10 flex pt-2 -mx-4 px-4">
         {['생성한 모임', '참여한 모임'].map((label, idx) => {
           const tabValue = ['hosted', 'joined'][idx] as 'hosted' | 'joined';
           return (
