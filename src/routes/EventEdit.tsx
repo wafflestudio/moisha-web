@@ -3,8 +3,10 @@ import { EventForm } from '@/components/EventForm';
 import type { FormValues } from '@/components/EventForm';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
 import { Button } from '@/components/ui/button';
+import { queryKeys } from '@/constants/queryKeys';
 import useAuthStore from '@/hooks/useAuthStore';
 import useEventDetail from '@/hooks/useEventDetail';
+import { useQueryClient } from '@tanstack/react-query';
 import { AlertCircle } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
@@ -14,12 +16,13 @@ export default function EventEdit() {
   const { id } = useParams<{ id: string }>();
 
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const {
     loading: fetchLoading,
     data,
     isDeleted,
-    handleFetchDetail,
+    hasFetchError,
   } = useEventDetail(id);
 
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -27,12 +30,10 @@ export default function EventEdit() {
   const user = useAuthStore((state) => state.user);
 
   useEffect(() => {
-    if (id) {
-      handleFetchDetail(id).then((status) => {
-        if (status === 'ERROR') navigate(`/event/${id}`);
-      });
+    if (hasFetchError && id) {
+      navigate(`/event/${id}`);
     }
-  }, [id, handleFetchDetail, navigate]);
+  }, [hasFetchError, id, navigate]);
 
   const event = data?.event;
 
@@ -116,6 +117,9 @@ export default function EventEdit() {
       const response = await updateEvent(id, payload);
 
       if (response.status === 201 || response.status === 200) {
+        await queryClient.invalidateQueries({
+          queryKey: queryKeys.events.detailBase(id),
+        });
         toast.success('모임이 수정되었습니다.');
         navigate(`/event/${id}`);
       }

@@ -1,13 +1,5 @@
-import { useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import {
-  AlertCircle,
-  Check,
-  // Dot,
-  Link as LinkIcon,
-  Loader,
-  X,
-} from 'lucide-react';
+import { AlertCircle, Check, Link as LinkIcon, Loader, X } from 'lucide-react';
 import { type ComponentProps, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { toast } from 'sonner';
@@ -44,30 +36,25 @@ import { formatEventDate, getRemainingTime } from '@/utils/date';
 export default function EventMain() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const { user, isLoggedIn } = useAuth();
-  const { removeGuestRegistration } = useAuthStore();
 
   // 1. 데이터 가져오기 및 권한 확인
   const {
     loading,
     data,
     isDeleted,
-    handleFetchDetail,
+    hasFetchError,
     handleCancelEvent,
     handleJoinEvent,
     handleDeleteEvent,
   } = useEventDetail(id);
   const view = useEventView(data);
 
-  // 2. 초기 데이터 로드
   useEffect(() => {
-    if (id) {
-      handleFetchDetail(id).then((status) => {
-        if (status === 'ERROR') navigate('/');
-      });
+    if (hasFetchError) {
+      navigate('/');
     }
-  }, [id, handleFetchDetail, navigate]);
+  }, [hasFetchError, navigate]);
 
   if (isDeleted || !id) {
     return (
@@ -112,9 +99,7 @@ export default function EventMain() {
       guestEmail: user?.email,
     });
     if (success) {
-      queryClient.resetQueries({ queryKey: ['myRegistrations'] });
       toast.success('신청이 완료되었습니다.');
-      navigate(0);
     }
   };
 
@@ -127,8 +112,6 @@ export default function EventMain() {
 
     const success = await handleCancelEvent(regId);
     if (success) {
-      queryClient.resetQueries({ queryKey: ['myRegistrations'] });
-      removeGuestRegistration(id);
       toast.success('신청이 취소되었습니다.');
     }
   };
@@ -136,8 +119,6 @@ export default function EventMain() {
   const onDeleteClick = async () => {
     const success = await handleDeleteEvent(id);
     if (success) {
-      queryClient.resetQueries({ queryKey: ['myEvents'] });
-      queryClient.resetQueries({ queryKey: ['myRegistrations'] });
       toast.success('모임이 삭제되었습니다.');
       navigate('/');
     }
@@ -200,10 +181,6 @@ export default function EventMain() {
                   {creator.email}
                 </span>
                 <div className="flex body-base">
-                  {/* TODO: 모임 생성일시도 요청
-                <span className="text-[#42A5F5]">15분 전 작성</span>
-                <Dot className="text-muted-foreground" />
-                */}
                   <span className="text-[#42A5F5]">
                     {getRegistrationStatus(event)}
                   </span>
