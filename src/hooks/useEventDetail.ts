@@ -19,9 +19,17 @@ interface JoinEventVariables {
   data: JoinEventRequest;
 }
 
+interface MergeEventDetailOptions {
+  onInvalidRegId?: () => void;
+}
+
+const shouldClearGuestRegId = (error: unknown): boolean =>
+  isAxiosError(error) && [401, 403, 404].includes(error.response?.status ?? 0);
+
 const getMergedEventDetail = async (
   eventId: string,
-  effectiveRegId?: string | null
+  effectiveRegId?: string | null,
+  options?: MergeEventDetailOptions
 ): Promise<EventDetailResponse> => {
   const eventRes = await getEventDetail(eventId);
   let mergedData = eventRes.data;
@@ -36,7 +44,7 @@ const getMergedEventDetail = async (
       regRes.status === 'CONFIRMED' || regRes.status === 'WAITLISTED';
 
     // 비로그인 신청자는 이벤트 상세 응답만으로 본인 상태를 알 수 없어서
-    // 저장해 둔 regId로 신청 상세를 병합해 같은 화면 상태를 구성합니다.
+    // URL 또는 저장해 둔 regId로 신청 상세를 병합해 같은 화면 상태를 구성합니다.
     mergedData = {
       ...mergedData,
       viewer: {
@@ -56,6 +64,9 @@ const getMergedEventDetail = async (
     };
   } catch (regError) {
     // regId가 만료되었거나 잘못된 경우에는 공개 상세만 보여줘야 합니다.
+    if (shouldClearGuestRegId(regError)) {
+      options?.onInvalidRegId?.();
+    }
     console.error('Failed to fetch guest registration info:', regError);
   }
 
@@ -63,21 +74,39 @@ const getMergedEventDetail = async (
 };
 
 export default function useEventDetail(id?: string) {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const invalidateEventRegistration = useInvalidateEventRegistration();
 
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const urlRegId = searchParams.get('regId');
   const guestRegId = useAuthStore((state) =>
     id ? state.guestRegistrations[id] : null
   );
-  const effectiveRegId = urlRegId || guestRegId;
+  const canUseGuestRegId = !isLoggedIn;
+  const effectiveRegId = canUseGuestRegId ? urlRegId || guestRegId : null;
 
   const setGuestRegistration = useAuthStore(
     (state) => state.setGuestRegistration
   );
+  const removeGuestRegistration = useAuthStore(
+    (state) => state.removeGuestRegistration
+  );
 
-  // 1. 이벤트 상세는 regId에 따라 viewer 상태가 달라질 수 있어 key에 함께 포함합니다.
+  const removeRegIdQuery = () => {
+    if (!searchParams.has('regId')) return;
+
+    const nextSearchParams = new URLSearchParams(searchParams);
+    nextSearchParams.delete('regId');
+    setSearchParams(nextSearchParams, { replace: true });
+  };
+
+  const clearGuestRegId = (eventId: string) => {
+    removeGuestRegistration(eventId);
+    removeRegIdQuery();
+  };
+
+  // 1. 비로그인 regId에 따라 viewer 상태가 달라질 수 있어 key에 함께 포함합니다.
   const eventDetailQuery = useQuery<EventDetailResponse, Error>({
     queryKey: id
       ? queryKeys.events.detail(id, effectiveRegId)
@@ -86,7 +115,9 @@ export default function useEventDetail(id?: string) {
       if (!id) {
         throw new Error('EVENT_ID_REQUIRED');
       }
-      return getMergedEventDetail(id, effectiveRegId);
+      return getMergedEventDetail(id, effectiveRegId, {
+        onInvalidRegId: () => clearGuestRegId(id),
+      });
     },
     enabled: Boolean(id),
     retry: (failureCount, error) => {
@@ -114,8 +145,9 @@ export default function useEventDetail(id?: string) {
     onSuccess: async (response, { eventId }) => {
       const regId = response.data.registrationPublicId;
 
-      if (regId) {
+      if (!isLoggedIn && regId) {
         setGuestRegistration(eventId, regId);
+        removeRegIdQuery();
       }
 
       await invalidateEventRegistration(eventId);
@@ -126,7 +158,8 @@ export default function useEventDetail(id?: string) {
     mutationFn: (registrationId: string) => deleteRegistration(registrationId),
     onSuccess: async () => {
       if (id) {
-        // 비로그인 사용자의 regId는 유지하고, 서버의 CANCELED 상태를 다시 조회합니다.
+        // 직접 취소한 신청은 더 이상 소유자 상태로 병합하지 않습니다.
+        clearGuestRegId(id);
         await invalidateEventRegistration(id);
       }
     },
