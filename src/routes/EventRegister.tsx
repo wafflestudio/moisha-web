@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import useAuthStore from '@/hooks/useAuthStore';
 import type { JoinEventRequest } from '@/types/events';
-import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { ShortEventDetailContent } from '../components/EventDetailContent';
@@ -15,10 +14,9 @@ import useEventDetail from '../hooks/useEventDetail';
 export default function EventRegister() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const setRedirectUrl = useAuthStore((state) => state.setRedirectUrl);
-  const { loading, data, handleFetchDetail, handleJoinEvent } =
-    useEventDetail();
+  const { loading, data, isDeleted, hasFetchError, handleJoinEvent } =
+    useEventDetail(id);
 
   // 폼 상태 관리
   const [formData, setFormData] = useState({
@@ -27,12 +25,10 @@ export default function EventRegister() {
   });
 
   useEffect(() => {
-    if (id) {
-      handleFetchDetail(id).then((status) => {
-        if (status === 'ERROR') navigate('/');
-      });
+    if (!id || isDeleted || hasFetchError) {
+      navigate('/');
     }
-  }, [id, handleFetchDetail, navigate]);
+  }, [id, isDeleted, hasFetchError, navigate]);
 
   if (loading || !data) {
     return (
@@ -62,7 +58,6 @@ export default function EventRegister() {
 
     const success = await handleJoinEvent(id, requestData);
     if (success) {
-      queryClient.resetQueries({ queryKey: ['myRegistrations'] });
       // 신청 성공 시 성공 페이지로 이동
       navigate(`/event/${id}`);
     }

@@ -28,23 +28,17 @@ export default function Guests() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<GuestStatus>('CONFIRMED');
-  const { handleBanEvent } = useEventDetail(id);
+  const { handleBanEvent, isBanning } = useEventDetail(id);
 
   // 1. 무한 스크롤 훅 연결
-  const {
-    data,
-    isLoading,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    refetch,
-  } = useInfiniteGuests({
-    eventId: id!,
-    filters: {
-      status: activeTab,
-      orderBy: 'registeredAt',
-    },
-  });
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useInfiniteGuests({
+      eventId: id!,
+      filters: {
+        status: activeTab,
+        orderBy: 'registeredAt',
+      },
+    });
 
   const totalCount = data?.pages[0]?.totalCount ?? 0;
 
@@ -61,7 +55,6 @@ export default function Guests() {
     const success = await handleBanEvent(regId);
     if (success) {
       toast.success(`${name} 님의 참여가 취소되었습니다.`);
-      refetch();
     }
   };
 
@@ -136,7 +129,8 @@ export default function Guests() {
                   <AlertDialogTrigger asChild>
                     <Button
                       variant="secondary"
-                      className="bg-[#333333] hover:bg-black text-white rounded-lg px-3 py-2 md:px-4 md:py-3 h-auto text-sm md:text-base font-bold shrink-0"
+                      disabled={isBanning}
+                      className="bg-[#333333] hover:bg-black text-white rounded-lg px-3 py-2 sm:px-4 sm:py-3 h-auto text-sm sm:text-base font-bold shrink-0"
                     >
                       강제취소
                     </Button>
@@ -155,6 +149,7 @@ export default function Guests() {
                     <AlertDialogFooter>
                       <AlertDialogCancel>신청 유지하기</AlertDialogCancel>
                       <AlertDialogAction
+                        disabled={isBanning}
                         onClick={() =>
                           handleCancelGuest(guest.name, guest.registrationId)
                         }
