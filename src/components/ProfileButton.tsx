@@ -33,8 +33,8 @@ export default function ProfileButton({
           <UserAvatar
             name={user.name}
             imageUrl={user.profileImage}
-            className="w-8 h-8 sm:w-10 sm:h-10 border-2"
-            fallbackClassName="font-semibold text-md sm:text-lg"
+            className="w-8 h-8 md:w-10 md:h-10 border-2"
+            fallbackClassName="font-semibold text-md md:text-lg"
           />
         </button>
       </DropdownMenuTrigger>

@@ -121,7 +121,7 @@ export default function EventCard({
       key={`card-${publicId}`}
       className="w-full rounded-lg border border-border"
     >
-      <Link to={`/event/${publicId}`}>
+      <Link to={`/event/${publicId}`} state={{ fromHome: true }}>
         <div className="flex flex-col px-4 pt-4 pb-3 gap-3">
           <h1>{title}</h1>
           <div className="flex flex-col gap-1">
@@ -151,7 +151,7 @@ export default function EventCard({
         </div>
       </Link>
       <div className="flex flex-col px-6 pt-3 pb-2 gap-1 bg-muted w-full rounded-b-lg items-start">
-        <Link to={`/event/${publicId}`}>
+        <Link to={`/event/${publicId}`} state={{ fromHome: true }}>
           <div className="flex gap-1.5">
             <Clock stroke="#757575" width="16" />
             <span className="body-base">
