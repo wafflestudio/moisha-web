@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { AlertCircle, Check, Link as LinkIcon, Loader, X } from 'lucide-react';
 import { type ComponentProps, useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { useLocation, useNavigate, useParams } from 'react-router';
 import { toast } from 'sonner';
 
 // Hooks
@@ -139,14 +139,18 @@ export default function EventMain() {
   return (
     <div className="flex flex-col pb-40">
       {/* 1. 상단 네비게이션 */}
-      {view === 'ADMIN' && (
+      {(fromHome || view === 'ADMIN') && (
         <Subheader
-          title="상세보기"
+          title={event.title}
           onBackClick={() => navigate('/')}
-          dropdownOptions={{
-            onEditClick: () => navigate('edit'),
-            onDeleteClick: onDeleteClick,
-          }}
+          dropdownOptions={
+            view === 'ADMIN'
+              ? {
+                  onEditClick: () => navigate('edit'),
+                  onDeleteClick: onDeleteClick,
+                }
+              : undefined
+          }
         />
       )}
 

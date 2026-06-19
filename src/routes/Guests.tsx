@@ -101,22 +101,22 @@ export default function Guests() {
           page.participants.map((guest) => (
             <div
               key={guest.registrationId}
-              className="flex items-center justify-between w-full gap-2 sm:gap-4"
+              className="flex items-center justify-between w-full gap-2 md:gap-4"
             >
-              <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+              <div className="flex items-center gap-3 md:gap-4 min-w-0 flex-1">
                 <UserAvatar name={guest.name} imageUrl={guest.profileImage} />
 
                 <div className="flex flex-col min-w-0 flex-1">
-                  <span className="text-lg sm:text-xl font-bold text-black truncate">
+                  <span className="text-lg md:text-xl font-bold text-black truncate">
                     {guest.name}
                   </span>
                   {guest.email ? (
-                    <span className="text-sm sm:text-lg text-gray-400 truncate">
+                    <span className="text-sm md:text-lg text-gray-400 truncate">
                       {guest.email}
                     </span>
                   ) : null}
                   {guest.status === 'WAITLISTED' && (
-                    <span className="text-sm sm:text-lg text-blue-400 font-semibold truncate">
+                    <span className="text-sm md:text-lg text-blue-400 font-semibold truncate">
                       대기 {guest.waitingNum}번
                     </span>
                   )}
