@@ -89,7 +89,7 @@ export default function useEventDetail(id?: string) {
   const setGuestRegistration = useAuthStore(
     (state) => state.setGuestRegistration
   );
-  
+
   const removeGuestRegistration = useAuthStore(
     (state) => state.removeGuestRegistration
   );
