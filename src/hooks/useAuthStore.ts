@@ -18,6 +18,8 @@ interface AuthState {
   setGuestRegistration: (eventId: string, registrationId: string) => void;
   // 신청 취소 시 정보를 삭제하는 액션
   removeGuestRegistration: (eventId: string) => void;
+  // 인증 상태가 바뀔 때 비로그인 신청 정보를 모두 삭제하는 액션
+  clearGuestRegistrations: () => void;
   // 소셜 로그인 및 회원가입 리다이렉트를 위한 상태
   redirectUrl: string | null;
   redirectTimestamp: number | null;
@@ -40,12 +42,16 @@ const useAuthStore = create<AuthState>()(
           user,
           token,
           isLoggedIn: true,
+          // 로그인 계정 상태와 브라우저에 남은 비로그인 신청 상태가 섞이지 않게 합니다.
+          guestRegistrations: {},
         }),
       logout: () =>
         set({
           user: null,
           token: null,
           isLoggedIn: false,
+          // 로그아웃 이후에는 이전 계정/브라우저 신청 상태를 이어 보지 않습니다.
+          guestRegistrations: {},
         }),
       updateUser: (user) => set({ user }),
       setGuestRegistration: (eventId, registrationId) =>
@@ -65,6 +71,7 @@ const useAuthStore = create<AuthState>()(
           delete newRegistrations[eventId];
           return { guestRegistrations: newRegistrations };
         }),
+      clearGuestRegistrations: () => set({ guestRegistrations: {} }),
 
       setRedirectUrl: (url) =>
         set({

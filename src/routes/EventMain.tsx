@@ -104,10 +104,10 @@ export default function EventMain() {
   };
 
   const onCancelClick = async () => {
-    // API 우선, 없으면 Zustand 스토어 확인
+    // 로그인 상태에서는 비로그인 브라우저에 남은 regId를 취소 대상으로 쓰지 않습니다.
     const regId =
       viewer.registrationPublicId ||
-      useAuthStore.getState().guestRegistrations[id];
+      (!isLoggedIn ? useAuthStore.getState().guestRegistrations[id] : null);
     if (!regId) return;
 
     const success = await handleCancelEvent(regId);
